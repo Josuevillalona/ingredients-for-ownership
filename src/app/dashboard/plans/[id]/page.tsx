@@ -200,12 +200,12 @@ function ViewPlanContent() {
 
         {/* Color-Coded Food Groups */}
         <div className="space-y-6">
-          {(['green', 'yellow', 'red'] as const).map((color) => {
+          {(['blue', 'yellow', 'red'] as const).map((color) => {
             const colorFoods = groupedIngredients[color] || [];
             if (colorFoods.length === 0) return null;
 
             const colorConfig = {
-              green: { name: 'Recommended Foods (Green)', bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-800', badge: 'bg-green-500' },
+              blue: { name: 'Recommended Foods (Blue)', bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', badge: 'bg-blue-500' },
               yellow: { name: 'Moderate Foods (Yellow)', bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-800', badge: 'bg-yellow-500' },
               red: { name: 'Foods to Avoid (Red)', bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800', badge: 'bg-red-500' }
             };
