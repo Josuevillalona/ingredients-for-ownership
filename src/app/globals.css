@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Brand Colors */
+  --brand-primary: #191B24;
+  --brand-accent: #BD9A60;
+  --brand-white: #FDFDFD;
+  --brand-cream: #FFF7EF;
+  --brand-black: #000000;
+  
+  /* Food Category Brand Integration */
+  --food-blue-brand: #3B82F6;
+  --food-yellow-brand: #F59E0B;
+  --food-red-brand: #EF4444;
+  
+  /* Interactive States */
+  --brand-hover: #A68755;
+  --brand-active: #8F7448;
+  --brand-focus: #BD9A60;
+}
+
+body {
+  font-family: 'Prompt', system-ui, sans-serif;
+  background-color: var(--brand-cream);
+  color: var(--brand-primary);
+}
+
+/* Custom scrollbar for mobile webkit */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--brand-cream);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--brand-accent);
+  border-radius: 3px;
+}
+
+/* Focus styles for accessibility */
+.focus-brand:focus {
+  outline: 2px solid var(--brand-focus);
+  outline-offset: 2px;
+}
+
+/* Touch-friendly minimum sizes */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Loading animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
