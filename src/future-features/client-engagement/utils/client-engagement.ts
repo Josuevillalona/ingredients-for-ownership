@@ -1,5 +1,5 @@
 import type { IngredientDocument } from '@/lib/types';
-import { calculateSmartProgress } from './progress';
+import { calculateSmartProgress } from '@/lib/utils/progress';
 
 /**
  * Client engagement status types
@@ -49,7 +49,9 @@ export function calculateClientEngagement(documents: IngredientDocument[]): Clie
     // Check for recent client activity (any clientChecked = true)
     const hasRecentActivity = doc.ingredients.some(ingredient => ingredient.clientChecked);
     if (hasRecentActivity && doc.updatedAt) {
-      const timestamp = doc.updatedAt.toMillis ? doc.updatedAt.toMillis() : new Date(doc.updatedAt).getTime();
+      const timestamp = doc.updatedAt.toMillis ? doc.updatedAt.toMillis() : 
+                       doc.updatedAt.toDate ? doc.updatedAt.toDate().getTime() : 
+                       new Date(doc.updatedAt as any).getTime();
       if (!lastActivityTimestamp || timestamp > lastActivityTimestamp) {
         lastActivityTimestamp = timestamp;
       }

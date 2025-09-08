@@ -1,0 +1,21 @@
+{
+  "name": "Ingredients for Ownership",
+  "short_name": "I4O Coach",
+  "description": "AI-assisted nutritional plan creation for health coaches",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#FFF7EF",
+  "theme_color": "#BD9A60",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["health", "productivity", "business"],
+  "lang": "en",
+  "scope": "/",
+  "prefer_related_applications": false
+}

@@ -1,9 +1,10 @@
 'use client';
 
+import { Suspense } from 'react';
 import { PlanBuilder } from '@/components/plans/PlanBuilder';
 import { useSearchParams } from 'next/navigation';
 
-export default function NewPlanPage() {
+function NewPlanContent() {
   const searchParams = useSearchParams();
   const clientId = searchParams.get('clientId');
 
@@ -43,5 +44,17 @@ export default function NewPlanPage() {
         />
       </main>
     </div>
+  );
+}
+
+export default function NewPlanPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-brand-cream flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-brand-gold border-t-transparent rounded-full"></div>
+      </div>
+    }>
+      <NewPlanContent />
+    </Suspense>
   );
 }

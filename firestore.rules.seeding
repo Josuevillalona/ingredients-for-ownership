@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Coaches collection - only allow users to read/write their own profile
+    match /coaches/{coachId} {
+      allow read, write: if request.auth != null && request.auth.uid == coachId;
+    }
+    
+    // Ingredient Documents collection - Layer 1 simplified architecture
+    match /ingredient-documents/{documentId} {
+      // Coaches can read/write their own documents
+      allow read, write: if request.auth != null && 
+        resource.data.coachId == request.auth.uid;
+      
+      // Coaches can create documents for themselves
+      allow create: if request.auth != null && 
+        request.resource.data.coachId == request.auth.uid;
+      
+      // Public read access for shared documents via shareToken
+      // This allows clients to view shared ingredient documents without authentication
+      allow read: if request.auth == null && 
+        resource.data.shareToken != null;
+      
+      // TEMPORARY: Allow admin seeding operations
+      allow write: if true;
+    }
+    
+    // Food Categories collection - TEMPORARY: Allow seeding operations
+    match /food-categories/{categoryId} {
+      allow read: if true; // Public read access for all food categories
+      allow write: if true; // TEMPORARY: Allow seeding operations
+    }
+    
+    // Foods collection - TEMPORARY: Allow seeding operations
+    match /foods/{foodId} {
+      allow read: if true; // Public read access for all food items
+      allow write: if true; // TEMPORARY: Allow seeding operations
+    }
+    
+    // Legacy collections for backward compatibility during transition
+    // These can be removed after full migration to Layer 1 architecture
+    
+    // Clients collection - only allow coaches to access their own clients
+    match /clients/{clientId} {
+      allow read, write: if request.auth != null && 
+        resource.data.coachId == request.auth.uid;
+      allow create: if request.auth != null && 
+        request.resource.data.coachId == request.auth.uid;
+    }
+    
+    // Plans collection - only allow coaches to access plans for their clients
+    match /plans/{planId} {
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/clients/$(resource.data.clientId)) &&
+        get(/databases/$(database)/documents/clients/$(resource.data.clientId)).data.coachId == request.auth.uid;
+      allow create: if request.auth != null && 
+        exists(/databases/$(database)/documents/clients/$(request.resource.data.clientId)) &&
+        get(/databases/$(database)/documents/clients/$(request.resource.data.clientId)).data.coachId == request.auth.uid;
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
