@@ -123,6 +123,14 @@ function DashboardContent() {
                   Create New Plan
                 </Button>
               </Link>
+              <Link href="/dashboard/foods">
+                <Button 
+                  variant="secondary" 
+                  className="text-brand-white border-brand-white/20 hover:bg-brand-white/10"
+                >
+                  Manage Foods
+                </Button>
+              </Link>
               <Link href="/dashboard/profile">
                 <Button 
                   variant="secondary" 
