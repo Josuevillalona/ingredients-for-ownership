@@ -191,15 +191,15 @@ export class FDCService {
 
     return {
       name: this.cleanFoodName(fdcFood.description),
-      category: enhanced.category || 'yellow', // Default to yellow if unsure
       description: this.generateDescription(fdcFood),
       servingSize: this.generateServingSize(fdcFood),
-      portionGuidelines: enhanced.portionGuidelines || this.generatePortionGuidelines(enhanced.category || 'yellow'),
+      portionGuidelines: enhanced.portionGuidelines || this.generatePortionGuidelines(),
       nutritionalInfo,
       fdcId: fdcFood.fdcId,
-      isGlobal: false,
-      coachId,
+      source: 'fdc-api' as const,
       tags: enhanced.tags || this.generateTags(fdcFood),
+      addedBy: coachId,
+      isGlobal: true as const,
       createdAt: Timestamp.now(),
       lastUpdated: Timestamp.now()
     };
@@ -224,18 +224,14 @@ export class FDCService {
   }
 
   /**
-   * Enhance food item with color categorization and additional metadata
+   * Enhance food item with additional metadata
    */
   private enhanceFoodItem(food: FDCSearchResultFood | any): FDCEnhancedFoodItem {
-    const category = this.assignColorCategory(food);
-    const confidence = this.calculateConfidence(food, category);
-    const portionGuidelines = this.generatePortionGuidelines(category);
+    const portionGuidelines = this.generatePortionGuidelines();
     const tags = this.generateTags(food);
 
     return {
       ...food,
-      category,
-      confidence,
       portionGuidelines,
       tags
     };
@@ -338,17 +334,8 @@ export class FDCService {
   /**
    * Generate portion guidelines based on category
    */
-  private generatePortionGuidelines(category: 'blue' | 'yellow' | 'red'): string {
-    switch (category) {
-      case 'blue':
-        return 'Unlimited - use freely as the base of meals and snacks';
-      case 'yellow':
-        return 'Moderate portions - include as part of balanced meals';
-      case 'red':
-        return 'Limited portions - occasional treats or special occasions only';
-      default:
-        return 'Moderate portions - include as part of balanced meals';
-    }
+  private generatePortionGuidelines(): string {
+    return 'Follow portion guidelines as assigned by your coach during plan creation';
   }
 
   /**

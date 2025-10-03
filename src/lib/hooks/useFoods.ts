@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Timestamp } from 'firebase/firestore';
 import { foodService } from '@/lib/firebase/foods';
-import { standardFoods } from '@/lib/data/standardFoods';
 import { useAuth } from './useAuth';
 import type { FoodItem, CreateFoodData } from '@/lib/types';
 
@@ -11,7 +9,7 @@ export function useFoods() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load foods for the current coach
+  // Load global foods available to all coaches
   const loadFoods = async () => {
     if (!user) {
       setFoods([]);
@@ -23,43 +21,13 @@ export function useFoods() {
       setLoading(true);
       setError(null);
       
-      // Start with USDA-verified standard foods
-      const usdaStandardFoods: FoodItem[] = standardFoods.map((food, index) => ({
-        ...food,
-        id: `usda-${index}`, // Generate consistent IDs for standard USDA foods
-        coachId: 'global', // Mark as global standard foods
-        createdAt: Timestamp.now(),
-        lastUpdated: Timestamp.now()
-      }));
-      
-      // Load additional foods added by coaches (FDC and manual fallback)
-      const additionalFoods = await foodService.getFoodsForCoach(user.uid);
-      const verifiedFoods = additionalFoods; // Include both FDC and manual foods
-      
-      // Combine standard and additional foods (FDC + manual)
-      const allFoods = [...usdaStandardFoods, ...verifiedFoods];
-      
-      // Remove duplicates based on fdcId (prefer user-added over standard)
-      const uniqueFoods = new Map<string, FoodItem>();
-      
-      // Add standard foods first
-      usdaStandardFoods.forEach(food => {
-        const key = food.fdcId?.toString() || food.id;
-        uniqueFoods.set(key, food);
-      });
-      
-      // Override with user-added foods (they take precedence)
-      verifiedFoods.forEach((food: FoodItem) => {
-        const key = food.fdcId?.toString() || food.id;
-        uniqueFoods.set(key, food);
-      });
-      
-      const finalFoods = Array.from(uniqueFoods.values());
+      // Load all global foods (saved by any coach)
+      const globalFoods = await foodService.getGlobalFoods();
       
       // Sort by name for consistent display
-      finalFoods.sort((a, b) => a.name.localeCompare(b.name));
+      globalFoods.sort((a, b) => a.name.localeCompare(b.name));
       
-      setFoods(finalFoods);
+      setFoods(globalFoods);
     } catch (err) {
       console.error('Error loading foods:', err);
       setError(err instanceof Error ? err.message : 'Failed to load foods');
@@ -68,7 +36,7 @@ export function useFoods() {
     }
   };
 
-  // Create a new food - ENABLED for FDC API foods and manual fallback
+  // Create a new global food - available to all coaches
   const createFood = async (foodData: CreateFoodData): Promise<string | null> => {
     if (!user) {
       setError('User not authenticated');
@@ -78,16 +46,10 @@ export function useFoods() {
     try {
       setError(null);
       
-      // Prefer FDC foods but allow manual as fallback
-      if ('fdcId' in foodData && foodData.fdcId) {
-        console.log('Creating USDA-verified food:', foodData.name);
-      } else {
-        console.log('Creating manual food (fallback):', foodData.name);
-        // Add source flag for manual foods
-        foodData.source = 'manual';
-      }
+      // Get coach name if available (you might need to get this from user profile)
+      const coachName = user.displayName || user.email || 'Unknown Coach';
       
-      const foodId = await foodService.createFood(user.uid, foodData);
+      const foodId = await foodService.createFood(user.uid, foodData, coachName);
       
       // Reload foods to include the new food
       await loadFoods();
@@ -100,36 +62,67 @@ export function useFoods() {
     }
   };
 
-  // Update an existing food - DISABLED for USDA-only system
+  // Update an existing food (only if added by current coach)
   const updateFood = async (foodId: string, updates: Partial<CreateFoodData>): Promise<boolean> => {
-    console.warn('Food editing disabled - using USDA-verified foods only');
-    setError('Food editing is disabled. Using USDA-verified foods only.');
-    return false;
+    if (!user) {
+      setError('User not authenticated');
+      return false;
+    }
+
+    try {
+      setError(null);
+      await foodService.updateFood(foodId, user.uid, updates);
+      
+      // Reload foods to reflect the update
+      await loadFoods();
+      
+      return true;
+    } catch (err) {
+      console.error('Error updating food:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update food');
+      return false;
+    }
   };
 
-  // Delete a food - DISABLED for USDA-only system
+  // Delete a food (only if added by current coach)
   const deleteFood = async (foodId: string): Promise<boolean> => {
-    console.warn('Food deletion disabled - using USDA-verified foods only');
-    setError('Food deletion is disabled. Using USDA-verified foods only.');
-    return false;
+    if (!user) {
+      setError('User not authenticated');
+      return false;
+    }
+
+    try {
+      setError(null);
+      await foodService.deleteFood(foodId, user.uid);
+      
+      // Reload foods to reflect the deletion
+      await loadFoods();
+      
+      return true;
+    } catch (err) {
+      console.error('Error deleting food:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete food');
+      return false;
+    }
   };
 
-  // Search foods - Search within USDA foods only
+  // Search foods - Search within global foods
   const searchFoods = async (searchTerm: string): Promise<FoodItem[]> => {
     if (!searchTerm.trim()) return foods;
     
-    const filteredFoods = foods.filter(food => 
-      food.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      food.category.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    
-    return filteredFoods;
+    try {
+      return await foodService.searchFoods(searchTerm);
+    } catch (err) {
+      console.error('Error searching foods:', err);
+      setError(err instanceof Error ? err.message : 'Failed to search foods');
+      return foods;
+    }
   };
 
-  // Get foods by category - Filter USDA foods by category
+  // @deprecated - Foods no longer have pre-assigned categories
   const getFoodsByCategory = async (category: 'blue' | 'yellow' | 'red'): Promise<FoodItem[]> => {
-    const filteredFoods = foods.filter(food => food.category === category);
-    return filteredFoods;
+    console.warn('getFoodsByCategory is deprecated - foods no longer have pre-assigned categories');
+    return [];
   };
 
   // Load foods when user changes
@@ -150,7 +143,7 @@ export function useFoods() {
   };
 }
 
-// Hook for getting specific foods by IDs - works with USDA foods
+// Hook for getting specific foods by IDs - works with global foods
 export function useFoodsByIds(foodIds: string[]) {
   const [foods, setFoods] = useState<FoodItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -168,19 +161,11 @@ export function useFoodsByIds(foodIds: string[]) {
         setLoading(true);
         setError(null);
         
-        // Match foods from USDA standard foods by ID
-        const usdaFoodsWithIds: FoodItem[] = standardFoods.map((food, index) => ({
-          ...food,
-          id: `usda-${index}`,
-          coachId: 'global',
-          createdAt: Timestamp.now(),
-          lastUpdated: Timestamp.now()
-        }));
-        
-        const matchedFoods = usdaFoodsWithIds.filter(food => foodIds.includes(food.id));
+        // Get foods from the global food database by IDs
+        const matchedFoods = await foodService.getFoodsByIds(foodIds);
         setFoods(matchedFoods);
       } catch (err) {
-        console.error('Error fetching USDA foods by IDs:', err);
+        console.error('Error fetching foods by IDs:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch foods');
       } finally {
         setLoading(false);

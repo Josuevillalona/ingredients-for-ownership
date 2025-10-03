@@ -14,51 +14,126 @@ import {
 } from 'firebase/firestore';
 import { db } from './config';
 import type { FoodItem, CreateFoodData } from '@/lib/types';
+import { huggingFaceCategorization } from '@/lib/services/huggingface-categorization';
 
 export class FoodService {
   private collectionName = 'foods';
 
   /**
-   * Create a new food item for a coach - ENABLED for FDC API foods and manual fallback
+   * Create a new global food item - available to all coaches
    */
-  async createFood(coachId: string, foodData: CreateFoodData): Promise<string> {
+  async createFood(coachId: string, foodData: CreateFoodData, coachName?: string): Promise<string> {
     const foodRef = doc(collection(db, this.collectionName));
     
+    // Ensure all required fields are present and have correct types
+    // Only include optional fields if they have values (Firestore doesn't allow undefined)
     const foodItem: Omit<FoodItem, 'id'> = {
-      ...foodData,
-      coachId,
-      isGlobal: false, // Coach-added foods are not global
+      name: foodData.name || '',
+      source: foodData.source || 'manual',
+      tags: Array.isArray(foodData.tags) ? foodData.tags : [],
+      addedBy: coachId,
+      isGlobal: true, // All foods are global in the new system
       createdAt: Timestamp.now(),
       lastUpdated: Timestamp.now()
     };
 
-    await setDoc(foodRef, foodItem);
-    return foodRef.id;
+    // Only add optional fields if they have actual values
+    if (foodData.description) {
+      foodItem.description = foodData.description;
+    }
+    if (foodData.servingSize) {
+      foodItem.servingSize = foodData.servingSize;
+    }
+    if (foodData.portionGuidelines) {
+      foodItem.portionGuidelines = foodData.portionGuidelines;
+    }
+    if (foodData.nutritionalInfo) {
+      foodItem.nutritionalInfo = foodData.nutritionalInfo;
+    }
+    if (foodData.fdcId) {
+      foodItem.fdcId = foodData.fdcId;
+    }
+    if (coachName) {
+      foodItem.addedByName = coachName;
+    }
+
+    // Add categorization if provided in foodData, otherwise auto-categorize
+    if (foodData.category) {
+      // Use provided category information
+      foodItem.category = foodData.category;
+      if (foodData.categoryConfidence) {
+        foodItem.categoryConfidence = foodData.categoryConfidence;
+      }
+      if (foodData.categoryMethod) {
+        foodItem.categoryMethod = foodData.categoryMethod;
+      }
+      // Always set categorizedAt to now when using provided category
+      foodItem.categorizedAt = Timestamp.now();
+    } else {
+      // Auto-categorize the food
+      try {
+        const categoryResult = await huggingFaceCategorization.categorizeFood({
+          id: foodRef.id,
+          name: foodItem.name,
+          description: foodItem.description,
+          tags: foodItem.tags,
+          source: foodItem.source,
+          addedBy: foodItem.addedBy,
+          isGlobal: foodItem.isGlobal,
+          createdAt: foodItem.createdAt,
+          lastUpdated: foodItem.lastUpdated
+        });
+
+        foodItem.category = categoryResult.category;
+        foodItem.categoryConfidence = categoryResult.confidence;
+        foodItem.categoryMethod = categoryResult.method;
+        foodItem.categorizedAt = Timestamp.now();
+      } catch (error) {
+        console.warn('Failed to categorize food during creation:', error);
+        // Continue without categorization - it can be added later
+      }
+    }
+
+    try {
+      await setDoc(foodRef, foodItem);
+      return foodRef.id;
+    } catch (error) {
+      console.error('Error saving food to Firestore:', error);
+      throw error;
+    }
   }
 
   /**
-   * Get all foods available to a coach (FDC foods and manual fallback foods)
+   * Get all global foods (available to all coaches)
    */
-  async getFoodsForCoach(coachId: string): Promise<FoodItem[]> {
+  async getGlobalFoods(): Promise<FoodItem[]> {
     try {
-      // Get all coach-specific foods (FDC and manual)
-      const coachFoodsQuery = query(
+      // Get all global foods ordered by name
+      const globalFoodsQuery = query(
         collection(db, this.collectionName),
-        where('coachId', '==', coachId),
+        where('isGlobal', '==', true),
         orderBy('name')
       );
       
-      const coachSnapshot = await getDocs(coachFoodsQuery);
-      const coachFoods = coachSnapshot.docs.map(doc => ({
+      const snapshot = await getDocs(globalFoodsQuery);
+      const foods = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as FoodItem[];
 
-      return coachFoods;
+      return foods;
     } catch (error) {
-      console.error('Error fetching foods for coach:', error);
+      console.error('Error fetching global foods:', error);
       return [];
     }
+  }
+
+  /**
+   * @deprecated Legacy method - replaced by getGlobalFoods()
+   */
+  async getFoodsForCoach(coachId: string): Promise<FoodItem[]> {
+    console.warn('getFoodsForCoach is deprecated, use getGlobalFoods() instead');
+    return this.getGlobalFoods();
   }
 
   /**
@@ -73,9 +148,9 @@ export class FoodService {
   /**
    * Search foods by name or tags
    */
-  async searchFoods(coachId: string, searchTerm: string): Promise<FoodItem[]> {
+  async searchFoods(searchTerm: string): Promise<FoodItem[]> {
     try {
-      const allFoods = await this.getFoodsForCoach(coachId);
+      const allFoods = await this.getGlobalFoods();
       const term = searchTerm.toLowerCase().trim();
 
       if (!term) return allFoods;
@@ -92,16 +167,11 @@ export class FoodService {
   }
 
   /**
-   * Get foods by category
+   * @deprecated Category filtering removed - foods no longer have pre-assigned categories
    */
   async getFoodsByCategory(coachId: string, category: 'blue' | 'yellow' | 'red'): Promise<FoodItem[]> {
-    try {
-      const allFoods = await this.getFoodsForCoach(coachId);
-      return allFoods.filter(food => food.category === category);
-    } catch (error) {
-      console.error('Error fetching foods by category:', error);
-      throw new Error('Failed to fetch foods by category');
-    }
+    console.warn('getFoodsByCategory is deprecated - foods no longer have pre-assigned categories');
+    return [];
   }
 
   /**
@@ -123,7 +193,7 @@ export class FoodService {
   }
 
   /**
-   * Update a food item (only if owned by coach or if editing is allowed)
+   * Update a food item (only if added by the current coach or admin privileges)
    */
   async updateFood(foodId: string, coachId: string, updates: Partial<CreateFoodData>): Promise<void> {
     try {
@@ -133,13 +203,9 @@ export class FoodService {
         throw new Error('Food not found');
       }
 
-      // Check if coach owns this food or if it's a global food they can edit
-      if (food.coachId !== coachId && food.isGlobal) {
-        throw new Error('Cannot edit global foods');
-      }
-
-      if (food.coachId !== coachId && !food.isGlobal) {
-        throw new Error('Cannot edit food belonging to another coach');
+      // Check if coach added this food
+      if (food.addedBy !== coachId) {
+        throw new Error('Cannot edit food added by another coach');
       }
 
       const updateData: Partial<FoodItem> = {
@@ -160,7 +226,7 @@ export class FoodService {
   }
 
   /**
-   * Delete a food item (only if owned by coach)
+   * Delete a food item (only if added by the current coach)
    */
   async deleteFood(foodId: string, coachId: string): Promise<void> {
     try {
@@ -170,13 +236,9 @@ export class FoodService {
         throw new Error('Food not found');
       }
 
-      // Only allow deletion of foods owned by the coach
-      if (food.coachId !== coachId) {
-        throw new Error('Cannot delete food belonging to another coach');
-      }
-
-      if (food.isGlobal) {
-        throw new Error('Cannot delete global foods');
+      // Only allow deletion of foods added by the coach
+      if (food.addedBy !== coachId) {
+        throw new Error('Cannot delete food added by another coach');
       }
 
       await deleteDoc(doc(db, this.collectionName, foodId));

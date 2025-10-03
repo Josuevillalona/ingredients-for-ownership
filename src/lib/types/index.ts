@@ -32,14 +32,13 @@ export interface Client {
 }
 
 /**
- * @deprecated Legacy food item model - being replaced by Food interface
- * Will be removed in future version after migration to global food database
+ * Global Food Item - Shared across all coaches
+ * Foods are saved from FDC API without color categories
+ * Color assignment happens during plan creation per client
  */
 export interface FoodItem {
   id: string;
-  coachId: string; // Foods can be coach-specific or global
   name: string;
-  category: 'blue' | 'yellow' | 'red';
   description?: string;
   servingSize?: string;
   portionGuidelines?: string;
@@ -51,19 +50,27 @@ export interface FoodItem {
     fiber?: number;
   };
   fdcId?: number; // FoodData Central ID for external foods
-  isGlobal: boolean; // Global foods available to all coaches
-  isStandard?: boolean; // USDA standard foods from migration
-  source?: string; // Source of the food (e.g., 'standard', 'custom', 'search')
+  source: 'fdc-api' | 'manual'; // Source of the food
   tags: string[]; // For easy searching/filtering
-  originalName?: string; // Original name before migration
-  migrationDate?: string; // When the food was migrated from local to USDA
+  
+  // AI Categorization fields - permanent storage for performance
+  category?: string; // Computed category: meat, seafood, plant-proteins, etc.
+  categoryConfidence?: number; // AI confidence score (0-1) for debugging
+  categoryMethod?: 'huggingface-ai' | 'fallback' | 'regex'; // How category was determined
+  categorizedAt?: Timestamp; // When categorization was performed
+  
+  // Global tracking fields
+  addedBy: string; // coachId who saved this food
+  addedByName?: string; // coach name for display
+  isGlobal: true; // marker for global foods
+  
+  // Timestamps
   createdAt: Timestamp;
   lastUpdated: Timestamp;
 }
 
 export interface CreateFoodData {
   name: string;
-  category: 'blue' | 'yellow' | 'red';
   description?: string;
   servingSize?: string;
   portionGuidelines?: string;
@@ -74,9 +81,14 @@ export interface CreateFoodData {
     fat?: number;
     fiber?: number;
   };
-  fdcId?: number; // FoodData Central ID for USDA foods
-  source?: string; // Source of the food (e.g., 'fdc-api', 'custom')
+  fdcId?: number; // FoodData Central ID for FDC API foods
+  source?: 'fdc-api' | 'manual'; // Source of the food
   tags: string[];
+  
+  // Optional category fields for pre-categorized foods
+  category?: string;
+  categoryConfidence?: number;
+  categoryMethod?: 'huggingface-ai' | 'fallback' | 'regex';
 }
 
 /**

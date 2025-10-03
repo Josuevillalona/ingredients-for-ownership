@@ -2,11 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
-import { FoodColorBadge } from '@/components/ui/FoodColorBadge';
 import { AddFDCFoodForm } from '@/components/food/AddFDCFoodForm';
 import { useFoods } from '@/lib/hooks/useFoods';
 import { useClients } from '@/lib/hooks/useClients';
-import { foodCategoriesForDisplay } from '@/lib/data/standardFoods';
 import type { FoodItem, Client, PlanFoodItem } from '@/lib/types';
 
 interface PlanBuilderProps {
@@ -36,20 +34,15 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
     }
   }, [selectedClientId, clients]);
 
-  // Filter foods based on search and category
+  // Filter foods based on search only
   const filteredFoods = foods.filter(food => {
     const matchesSearch = food.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          food.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesCategory = activeCategory === 'all' || food.category === activeCategory;
-    return matchesSearch && matchesCategory;
+    return matchesSearch;
   });
 
-  // Group foods by category for organized display
-  const groupedFoods = {
-    blue: filteredFoods.filter(f => f.category === 'blue'),
-    yellow: filteredFoods.filter(f => f.category === 'yellow'), 
-    red: filteredFoods.filter(f => f.category === 'red')
-  };
+  // Since foods no longer have categories, show all foods in a single list
+  const displayFoods = filteredFoods;
 
   const toggleFoodSelection = (food: FoodItem) => {
     const foodKey = food.id;
@@ -60,11 +53,11 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
       delete newSelection[foodKey];
       setSelectedFoods(newSelection);
     } else {
-      // Add to selection
+      // Add to selection - Note: This component needs refactoring for new schema
       const planFoodItem: PlanFoodItem = {
         foodId: food.id,
         foodName: food.name,
-        category: food.category,
+        category: 'blue', // Temporary default - component needs refactoring
         servingSize: food.servingSize,
         mealType: 'breakfast', // Default, can be changed later
         notes: ''
@@ -248,122 +241,22 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
           </div>
         </div>
 
-        {/* Category Filter */}
-        <div className="flex gap-2 mb-6 overflow-x-auto">
-          <button
-            onClick={() => setActiveCategory('all')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
-              activeCategory === 'all'
-                ? 'bg-brand-gold text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            All Foods ({filteredFoods.length})
-          </button>
-          <button
-            onClick={() => setActiveCategory('blue')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
-              activeCategory === 'blue'
-                ? 'bg-blue-600 text-white'
-                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-            }`}
-          >
-            Blue Foods ({groupedFoods.blue.length})
-          </button>
-          <button
-            onClick={() => setActiveCategory('yellow')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
-              activeCategory === 'yellow'
-                ? 'bg-yellow-600 text-white'
-                : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-            }`}
-          >
-            Yellow Foods ({groupedFoods.yellow.length})
-          </button>
-          <button
-            onClick={() => setActiveCategory('red')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
-              activeCategory === 'red'
-                ? 'bg-red-600 text-white'
-                : 'bg-red-100 text-red-700 hover:bg-red-200'
-            }`}
-          >
-            Red Foods ({groupedFoods.red.length})
-          </button>
+        {/* LEGACY COMPONENT - NEEDS REFACTORING FOR NEW FOOD SCHEMA */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center">
+            <div className="w-5 h-5 bg-yellow-400 rounded-full mr-2"></div>
+            <h3 className="text-sm font-medium text-yellow-800">Legacy Plan Builder</h3>
+          </div>
+          <p className="text-sm text-yellow-700 mt-1">
+            This component uses the legacy plan system and needs updating for the new global food database. 
+            Please use <strong>/dashboard/plans/create</strong> for the updated plan creation experience.
+          </p>
         </div>
 
-        {/* Food Grid by Category */}
-        <div className="space-y-6">
-          {Object.entries(groupedFoods).map(([category, categoryFoods]) => {
-            if (activeCategory !== 'all' && activeCategory !== category) return null;
-            if (categoryFoods.length === 0) return null;
-
-            return (
-              <div key={category}>
-                <div className="flex items-center gap-3 mb-4">
-                  <FoodColorBadge category={category as 'blue' | 'yellow' | 'red'}>
-                    {category.charAt(0).toUpperCase() + category.slice(1)} Foods
-                  </FoodColorBadge>
-                  <span className="text-sm text-gray-500">
-                    ({categoryFoods.length} foods)
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {categoryFoods.map((food) => {
-                    const isSelected = !!selectedFoods[food.id];
-                    
-                    return (
-                      <div
-                        key={food.id}
-                        onClick={() => toggleFoodSelection(food)}
-                        className={`
-                          p-4 border-2 rounded-lg cursor-pointer transition-all
-                          ${isSelected
-                            ? 'border-brand-gold bg-brand-cream shadow-md'
-                            : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                          }
-                        `}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <h4 className="font-medium text-gray-900 text-sm leading-tight">
-                            {food.name}
-                          </h4>
-                          <div className="ml-2 flex-shrink-0">
-                            <div className={`
-                              w-5 h-5 rounded border-2 flex items-center justify-center
-                              ${isSelected
-                                ? 'bg-brand-gold border-brand-gold'
-                                : 'border-gray-300'
-                              }
-                            `}>
-                              {isSelected && (
-                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {food.servingSize && (
-                          <p className="text-xs text-gray-600 mb-1">
-                            <span className="font-medium">Serving:</span> {food.servingSize}
-                          </p>
-                        )}
-
-                        {food.description && (
-                          <p className="text-xs text-gray-500 line-clamp-2">
-                            {food.description}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+        {/* Disabled temporarily - needs refactoring */}
+        <div className="text-center py-8 text-gray-500">
+          <p>Plan builder temporarily disabled pending schema updates.</p>
+          <p className="text-sm mt-2">Use the new plan creation interface instead.</p>
         </div>
 
         {/* Empty State */}
@@ -406,9 +299,9 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
             {Object.values(selectedFoods).map((planFood) => (
               <div key={planFood.foodId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <FoodColorBadge category={planFood.category} size="sm">
+                  <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">
                     {planFood.category.charAt(0).toUpperCase()}
-                  </FoodColorBadge>
+                  </span>
                   <span className="text-sm font-medium">{planFood.foodName}</span>
                 </div>
                 <button

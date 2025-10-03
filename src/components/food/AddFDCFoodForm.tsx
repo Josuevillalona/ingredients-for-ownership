@@ -44,7 +44,6 @@ export function AddFDCFoodForm({
       // Convert to CreateFoodData format
       const createData: CreateFoodData = {
         name: selectedFood.name,
-        category: selectedFood.category,
         description: selectedFood.description,
         servingSize: selectedFood.servingSize,
         portionGuidelines: selectedFood.portionGuidelines,

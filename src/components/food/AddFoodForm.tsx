@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { FoodColorBadge } from '@/components/ui/FoodColorBadge';
-import { FOOD_CATEGORIES } from '@/lib/types';
 import type { CreateFoodData, FoodItem } from '@/lib/types';
 
 interface AddFoodFormProps {
@@ -19,12 +17,12 @@ export function AddFoodForm({
 }: AddFoodFormProps) {
   const [formData, setFormData] = useState<CreateFoodData>(() => ({
     name: initialData?.name || '',
-    category: initialData?.category || 'blue',
     description: initialData?.description || '',
     servingSize: initialData?.servingSize || '',
     portionGuidelines: initialData?.portionGuidelines || '',
     nutritionalInfo: initialData?.nutritionalInfo || {},
-    tags: initialData?.tags || []
+    tags: initialData?.tags || [],
+    source: 'manual'
   }));
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -112,41 +110,6 @@ export function AddFoodForm({
               placeholder="Enter food name..."
             />
             {errors.name && <p className="text-red-600 text-sm mt-1">{errors.name}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Food Category *
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {Object.entries(FOOD_CATEGORIES).map(([key, category]) => (
-                <label key={key} className="cursor-pointer">
-                  <input
-                    type="radio"
-                    name="category"
-                    value={key}
-                    checked={formData.category === key}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      category: e.target.value as 'blue' | 'yellow' | 'red' 
-                    }))}
-                    className="sr-only"
-                  />
-                  <div className={`
-                    p-3 border-2 rounded-lg transition-all
-                    ${formData.category === key 
-                      ? 'border-brand-gold bg-brand-cream' 
-                      : 'border-gray-200 hover:border-gray-300'
-                    }
-                  `}>
-                    <FoodColorBadge category={key as 'blue' | 'yellow' | 'red'} size="sm">
-                      {category.name}
-                    </FoodColorBadge>
-                    <p className="text-xs text-gray-600 mt-1">{category.description}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
           </div>
 
           <div>

@@ -1,5 +1,3 @@
-import { FoodColorBadge } from '@/components/ui/FoodColorBadge';
-import { FOOD_CATEGORIES } from '@/lib/types';
 import type { FoodItem } from '@/lib/types';
 
 interface FoodCardProps {
@@ -27,7 +25,7 @@ export function FoodCard({
     }
   };
 
-  const canEdit = !food.isGlobal;
+  const canEdit = food.addedBy; // Can edit if there's an addedBy field (user-added)
 
   return (
     <div 
@@ -41,9 +39,16 @@ export function FoodCard({
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <h3 className="font-medium text-gray-900 mb-1">{food.name}</h3>
-          <FoodColorBadge category={food.category}>
-            {FOOD_CATEGORIES[food.category].name}
-          </FoodColorBadge>
+          <div className="flex items-center gap-2">
+            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+              {food.source === 'fdc-api' ? 'USDA' : 'Manual'}
+            </span>
+            {food.fdcId && (
+              <span className="text-xs text-gray-500">
+                FDC: {food.fdcId}
+              </span>
+            )}
+          </div>
         </div>
         
         {showActions && canEdit && (
@@ -124,10 +129,10 @@ export function FoodCard({
         </div>
       )}
 
-      {food.isGlobal && (
+      {food.addedByName && (
         <div className="mt-3 pt-3 border-t border-gray-100">
-          <span className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
-            Global Food
+          <span className="text-xs text-gray-500">
+            Added by {food.addedByName}
           </span>
         </div>
       )}

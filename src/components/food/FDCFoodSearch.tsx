@@ -14,6 +14,7 @@ import type { FoodItem } from '@/lib/types';
 
 interface FDCFoodSearchProps {
   onFoodSelect?: (foodItem: Omit<FoodItem, 'id'>) => void;
+  onFoodQuickSave?: (foodItem: Omit<FoodItem, 'id'>) => void;
   onFoodDetail?: (fdcId: number) => void;
   initialQuery?: string;
   maxResults?: number;
@@ -29,6 +30,7 @@ interface SearchFilters {
 
 export function FDCFoodSearch({
   onFoodSelect,
+  onFoodQuickSave,
   onFoodDetail,
   initialQuery = '',
   maxResults = 20,
@@ -48,6 +50,7 @@ export function FDCFoodSearch({
 
   const [query, setQuery] = useState(initialQuery);
   const [selectedFoods, setSelectedFoods] = useState<Set<number>>(new Set());
+  const [quickSavingId, setQuickSavingId] = useState<number | null>(null);
   const [serviceAvailable, setServiceAvailable] = useState<boolean | null>(null);
   const [filters, setFilters] = useState<SearchFilters>({
     dataType: ['Foundation', 'Branded'],
@@ -79,6 +82,21 @@ export function FDCFoodSearch({
       console.error('Search error:', error);
     }
   }, [query, maxResults, filters, searchFoodsSimple]);
+
+  const handleFoodQuickSave = useCallback(async (food: FDCEnhancedFoodItem) => {
+    if (!onFoodQuickSave) return;
+
+    setQuickSavingId(food.fdcId);
+    try {
+      // Get detailed food information and convert to FoodItem
+      const detail = await getFoodDetail(food.fdcId, 'abridged');
+      onFoodQuickSave(detail.foodItem);
+    } catch (error) {
+      console.error('Error fetching food detail for quick save:', error);
+    } finally {
+      setQuickSavingId(null);
+    }
+  }, [onFoodQuickSave, getFoodDetail]);
 
   const handleFoodSelect = useCallback(async (food: FDCEnhancedFoodItem) => {
     if (!onFoodSelect) return;
@@ -238,7 +256,9 @@ export function FDCFoodSearch({
                 food={food}
                 isSelected={selectedFoods.has(food.fdcId)}
                 onSelect={() => handleFoodSelect(food)}
+                onQuickSave={() => handleFoodQuickSave(food)}
                 onViewDetail={() => onFoodDetail?.(food.fdcId)}
+                isQuickSaving={quickSavingId === food.fdcId}
               />
             ))}
           </div>
@@ -264,10 +284,12 @@ interface FDCFoodCardProps {
   food: FDCEnhancedFoodItem;
   isSelected: boolean;
   onSelect: () => void;
+  onQuickSave?: () => void;
   onViewDetail?: () => void;
+  isQuickSaving?: boolean;
 }
 
-function FDCFoodCard({ food, isSelected, onSelect, onViewDetail }: FDCFoodCardProps) {
+function FDCFoodCard({ food, isSelected, onSelect, onQuickSave, onViewDetail, isQuickSaving }: FDCFoodCardProps) {
   return (
     <div
       className={`border rounded-lg p-3 cursor-pointer transition-colors ${
@@ -307,17 +329,46 @@ function FDCFoodCard({ food, isSelected, onSelect, onViewDetail }: FDCFoodCardPr
           )}
         </div>
 
-        {onViewDetail && (
-          <Button
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewDetail();
-            }}
-            className="ml-2 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
-          >
-            Details
-          </Button>
-        )}
+        <div className="flex space-x-2 ml-2">
+          {onQuickSave && (
+            <>
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect(); // Preview the food
+                }}
+                className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+              >
+                Preview
+              </Button>
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onQuickSave();
+                }}
+                disabled={isQuickSaving}
+                className={`px-2 py-1 text-xs rounded ${
+                  isQuickSaving 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-green-100 hover:bg-green-200 text-green-700'
+                }`}
+              >
+                {isQuickSaving ? 'Saving...' : 'Quick Save'}
+              </Button>
+            </>
+          )}
+          {onViewDetail && !onQuickSave && (
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewDetail();
+              }}
+              className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+            >
+              Details
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

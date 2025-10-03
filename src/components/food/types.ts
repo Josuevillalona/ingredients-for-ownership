@@ -21,12 +21,12 @@ export interface FoodSelectionState {
   selectedCategory?: string;
 }
 
-// Status color mapping for UI
+// Status color mapping for UI - matches final plan colors
 export const statusColors = {
   approved: {
-    bg: 'bg-green-500',
-    border: 'border-green-500',
-    text: 'text-green-700',
+    bg: 'bg-blue-500',
+    border: 'border-blue-500',
+    text: 'text-blue-700',
     label: 'Approved'
   },
   neutral: {

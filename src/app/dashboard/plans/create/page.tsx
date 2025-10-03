@@ -7,16 +7,25 @@ import { useAuth } from '@/components/providers/AuthProvider';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { db } from '@/lib/firebase/config';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { IngredientDocumentService } from '@/lib/firebase/ingredient-documents';
+import { foodService } from '@/lib/firebase/foods';
 import { FoodSelectionGuide, FoodItemData, CategoryData, FoodStatus } from '@/components/food';
+import type { FoodItem } from '@/lib/types';
 
 interface Food {
   id: string;
   name: string;
-  categoryId: string;
-  nutritionalHighlights?: string[];
+  description?: string;
+  tags: string[];
+  nutritionalInfo?: {
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+    fiber?: number;
+  };
   fdcId?: number;
+  source: 'fdc-api' | 'manual';
 }
 
 interface FoodCategory {
@@ -24,7 +33,6 @@ interface FoodCategory {
   name: string;
   description?: string;
   order: number;
-  foods?: Food[];
 }
 
 export default function CreatePlanPage() {
@@ -39,7 +47,7 @@ function CreatePlanContent() {
   const { user } = useAuth();
   const router = useRouter();
   const [foodCategories, setFoodCategories] = useState<FoodCategory[]>([]);
-  const [foods, setFoods] = useState<Food[]>([]);
+  const [foods, setFoods] = useState<FoodItem[]>([]);
   const [foodStatuses, setFoodStatuses] = useState<Map<string, FoodStatus>>(new Map());
   const [clientName, setClientName] = useState('');
   const [loading, setLoading] = useState(true);
@@ -56,26 +64,23 @@ function CreatePlanContent() {
     try {
       setLoading(true);
 
-      // Load food categories
-      const categoriesQuery = query(
-        collection(db, 'food-categories'),
-        orderBy('order', 'asc')
-      );
-      const categoriesSnapshot = await getDocs(categoriesQuery);
-      const categories = categoriesSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as FoodCategory[];
-
-      // Load all foods
-      const foodsQuery = query(collection(db, 'foods'));
-      const foodsSnapshot = await getDocs(foodsQuery);
-      const allFoods = foodsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Food[];
-
-      setFoodCategories(categories);
+      // Load all foods using the same service as the foods page
+      const allFoods = await foodService.getGlobalFoods();
+      
+      // Create coach-friendly categories that match our AI service
+      const coachCategories: FoodCategory[] = [
+        { id: 'meat', name: 'Meat & Poultry', description: 'Chicken, beef, pork, lamb, eggs', order: 1 },
+        { id: 'seafood', name: 'Seafood', description: 'Fish, shellfish, marine proteins', order: 2 },
+        { id: 'plant-proteins', name: 'Plant Proteins', description: 'Tofu, beans, lentils, protein powders', order: 3 },
+        { id: 'vegetables', name: 'Vegetables', description: 'Fresh vegetables and leafy greens', order: 4 },
+        { id: 'healthy-carbs', name: 'Healthy Carbs', description: 'Whole grains, quinoa, sweet potatoes', order: 5 },
+        { id: 'healthy-fats', name: 'Healthy Fats', description: 'Nuts, seeds, avocado, olive oil', order: 6 },
+        { id: 'fruits', name: 'Fruits', description: 'Fresh and dried fruits', order: 7 },
+        { id: 'dairy', name: 'Dairy', description: 'Milk, cheese, yogurt products', order: 8 },
+        { id: 'other', name: 'Other Foods', description: 'Processed and miscellaneous foods', order: 9 }
+      ];
+      
+      setFoodCategories(coachCategories);
       setFoods(allFoods);
       
       // Initialize all foods with 'none' status
@@ -84,6 +89,9 @@ function CreatePlanContent() {
         initialStatuses.set(food.id, 'none');
       });
       setFoodStatuses(initialStatuses);
+      
+
+      
     } catch (error) {
       console.error('Error loading food data:', error);
     } finally {
@@ -91,15 +99,39 @@ function CreatePlanContent() {
     }
   };
 
+
+
   // Convert our data to the format expected by FoodSelectionGuide
   const getFoodItemData = (): FoodItemData[] => {
-    return foods.map(food => ({
-      id: food.id,
-      name: food.name,
-      status: foodStatuses.get(food.id) || 'none',
-      categoryId: food.categoryId,
-      nutritionalHighlights: food.nutritionalHighlights
-    }));
+    return foods.map(food => {
+      // Use stored category if available, otherwise default to 'other'
+      const categoryId = food.category || 'other';
+      
+      // Generate nutritional highlights from nutritionalInfo
+      const nutritionalHighlights: string[] = [];
+      if (food.nutritionalInfo) {
+        const { calories, protein, carbs, fat, fiber } = food.nutritionalInfo;
+        if (protein && protein > 10) nutritionalHighlights.push('High Protein');
+        if (fiber && fiber > 3) nutritionalHighlights.push('High Fiber');
+        if (calories && calories < 100) nutritionalHighlights.push('Low Calorie');
+      }
+      
+      // Add category confidence as a highlight if available
+      if (food.categoryConfidence && food.categoryConfidence > 0.8) {
+        const confidence = (food.categoryConfidence * 100).toFixed(0);
+        const method = food.categoryMethod === 'regex' ? 'Keyword' : 
+                     food.categoryMethod === 'huggingface-ai' ? 'AI' : 'Auto';
+        nutritionalHighlights.push(`${method}: ${confidence}%`);
+      }
+
+      return {
+        id: food.id,
+        name: food.name,
+        status: foodStatuses.get(food.id) || 'none',
+        categoryId,
+        nutritionalHighlights
+      };
+    });
   };
 
   const getCategoryData = (): CategoryData[] => {
@@ -146,20 +178,20 @@ function CreatePlanContent() {
         let isSelected = true; // All foods with a status should be included in the plan
         
         if (status === 'approved') {
-          // For approved foods, use green (recommended)
+          // Approved foods = Blue foods (unlimited consumption)
           colorCode = 'blue';
         } else if (status === 'neutral') {
-          // For neutral foods, use yellow (caution/moderation)
+          // Neutral foods = Yellow foods (moderate portions)
           colorCode = 'yellow';
         } else if (status === 'avoid') {
-          // For avoid foods, use red (do not consume)
+          // Avoid foods = Red foods (limited consumption)
           colorCode = 'red';
         }
 
         // Ensure no undefined values
         return {
           foodId: food.id,
-          categoryId: food.categoryId || '',
+          categoryId: getFoodItemData().find(f => f.id === food.id)?.categoryId || 'other',
           colorCode,
           isSelected,
           notes: `Coach marked as: ${status}`
@@ -228,7 +260,9 @@ function CreatePlanContent() {
           <div className="w-16 h-16 bg-brand-gold rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
             <span className="text-brand-white font-prompt font-bold text-2xl">I</span>
           </div>
-          <p className="text-brand-dark/60 font-prompt">Loading food database...</p>
+          <p className="text-brand-dark/60 font-prompt">
+            Loading food database...
+          </p>
         </div>
       </div>
     );
@@ -278,19 +312,28 @@ function CreatePlanContent() {
               />
             </div>
             
-            {/* Status Summary */}
-            <div className="flex items-center space-x-6 text-sm font-prompt">
-              <div className="flex items-center space-x-2">
+            {/* AI Status & Summary */}
+            <div className="flex items-center space-x-8">
+              {/* AI Status Indicator */}
+              <div className="flex items-center space-x-2 text-sm font-prompt">
                 <div className="w-3 h-3 bg-green-500 rounded-full" />
-                <span className="text-brand-dark">Approved: {statusSummary.approved}</span>
+                <span className="text-brand-dark/70">Ready to build</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-                <span className="text-brand-dark">Neutral: {statusSummary.neutral}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-red-500 rounded-full" />
-                <span className="text-brand-dark">Avoid: {statusSummary.avoid}</span>
+              
+              {/* Status Summary */}
+              <div className="flex items-center space-x-6 text-sm font-prompt">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full" />
+                  <span className="text-brand-dark">Approved: {statusSummary.approved}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full" />
+                  <span className="text-brand-dark">Neutral: {statusSummary.neutral}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full" />
+                  <span className="text-brand-dark">Avoid: {statusSummary.avoid}</span>
+                </div>
               </div>
             </div>
 
