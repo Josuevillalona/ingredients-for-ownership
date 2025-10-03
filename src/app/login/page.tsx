@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/components/providers/AuthProvider';
@@ -13,7 +13,14 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signIn, user, loading: authLoading } = useAuth();
+
+  // Redirect if user is already authenticated
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +29,7 @@ export default function LoginPage() {
 
     try {
       await signIn(formData.email, formData.password);
+      // Explicitly navigate after successful sign in
       router.push('/dashboard');
     } catch (error: any) {
       setError(error.message);
@@ -37,6 +45,25 @@ export default function LoginPage() {
       [name]: value
     }));
   };
+
+  // Show loading screen while checking auth state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-brand-cream flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-brand-gold rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
+            <span className="text-brand-white font-prompt font-bold text-2xl">I</span>
+          </div>
+          <p className="text-brand-dark/60 font-prompt">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't show login form if user is already authenticated
+  if (user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-brand-cream flex items-center justify-center px-4">
