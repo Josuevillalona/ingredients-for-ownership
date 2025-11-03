@@ -11,6 +11,7 @@ import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import type { IngredientDocument, Food } from '@/lib/types';
 import { ClientProgress } from '@/components/client/ClientProgress';
+import { ExportPDFButton } from '@/components/plans/ExportPDFButton';
 
 export default function ViewPlanPage() {
   return (
@@ -179,7 +180,11 @@ function ViewPlanContent() {
                 <span>Foods: {getSelectedFoodsWithDetails().length}</span>
               </div>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
+              <ExportPDFButton
+                documentId={documentId}
+                clientName={document.clientName}
+              />
               <Button
                 variant="secondary"
                 size="sm"

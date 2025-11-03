@@ -54,35 +54,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    setLoading(true);
     try {
       await authService.signIn(email, password);
       // Auth state change will handle setting user and coach
     } catch (error) {
-      setLoading(false);
       throw error;
     }
   };
 
   const signUp = async (email: string, password: string, name: string) => {
-    setLoading(true);
     try {
       await authService.createCoach(email, password, name);
       // Sign in after successful registration
       await authService.signIn(email, password);
+      // Auth state change will handle setting user and coach
     } catch (error) {
-      setLoading(false);
       throw error;
     }
   };
 
   const signOut = async () => {
-    setLoading(true);
     try {
       await authService.signOut();
       // Auth state change will handle clearing user and coach
     } catch (error) {
-      setLoading(false);
       throw error;
     }
   };

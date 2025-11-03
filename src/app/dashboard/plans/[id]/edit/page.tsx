@@ -12,14 +12,6 @@ import { IngredientDocumentService } from '@/lib/firebase/ingredient-documents';
 import { FoodSelectionGuide, FoodItemData, CategoryData, FoodStatus } from '@/components/food';
 import type { IngredientDocument, Food } from '@/lib/types';
 
-interface FoodCategory {
-  id: string;
-  name: string;
-  description?: string;
-  order: number;
-  foods?: Food[];
-}
-
 export default function EditPlanPage() {
   return (
     <ProtectedRoute>
@@ -35,7 +27,6 @@ function EditPlanContent() {
   const documentId = params.id as string;
 
   const [document, setDocument] = useState<IngredientDocument | null>(null);
-  const [foodCategories, setFoodCategories] = useState<FoodCategory[]>([]);
   const [foods, setFoods] = useState<Food[]>([]);
   const [foodStatuses, setFoodStatuses] = useState<Map<string, FoodStatus>>(new Map());
   const [clientName, setClientName] = useState('');
@@ -69,17 +60,6 @@ function EditPlanContent() {
       setDocument(doc);
       setClientName(doc.clientName);
 
-      // Load food categories
-      const categoriesQuery = query(
-        collection(db, 'food-categories'),
-        orderBy('order', 'asc')
-      );
-      const categoriesSnapshot = await getDocs(categoriesQuery);
-      const categories = categoriesSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as FoodCategory[];
-
       // Load all foods
       const foodsQuery = query(collection(db, 'foods'));
       const foodsSnapshot = await getDocs(foodsQuery);
@@ -88,7 +68,6 @@ function EditPlanContent() {
         ...doc.data()
       })) as Food[];
 
-      setFoodCategories(categories);
       setFoods(allFoods);
 
       // Initialize food statuses from existing document
@@ -125,21 +104,37 @@ function EditPlanContent() {
 
   // Convert our data to the format expected by FoodSelectionGuide
   const getFoodItemData = (): FoodItemData[] => {
-    return foods.map(food => ({
-      id: food.id,
-      name: food.name,
-      status: foodStatuses.get(food.id) || 'none',
-      categoryId: food.categoryId,
-      nutritionalHighlights: food.nutritionalHighlights
-    }));
+    return foods.map(food => {
+      // Use the 'category' field (not 'categoryId') - this is auto-categorized by AI
+      // @ts-ignore - Food type has 'category' field from FoodItem interface
+      const categoryId = food.category || 'other';
+      
+      return {
+        id: food.id,
+        name: food.name,
+        status: foodStatuses.get(food.id) || 'none',
+        categoryId,
+        nutritionalHighlights: food.nutritionalHighlights
+      };
+    });
   };
 
   const getCategoryData = (): CategoryData[] => {
-    return foodCategories.map(category => ({
-      id: category.id,
-      title: category.name,
-      order: category.order
-    }));
+    // Use the same categories as the create page (not from Firestore)
+    // These match the AI categorization system
+    const coachCategories: CategoryData[] = [
+      { id: 'meat', title: 'Meat & Poultry', order: 1 },
+      { id: 'seafood', title: 'Seafood', order: 2 },
+      { id: 'plant-proteins', title: 'Plant Proteins', order: 3 },
+      { id: 'vegetables', title: 'Vegetables', order: 4 },
+      { id: 'healthy-carbs', title: 'Healthy Carbs', order: 5 },
+      { id: 'healthy-fats', title: 'Healthy Fats', order: 6 },
+      { id: 'fruits', title: 'Fruits', order: 7 },
+      { id: 'dairy', title: 'Dairy', order: 8 },
+      { id: 'other', title: 'Other Foods', order: 9 }
+    ];
+    
+    return coachCategories;
   };
 
   const handleStatusChange = (foodId: string, status: FoodStatus) => {
