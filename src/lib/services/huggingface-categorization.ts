@@ -53,6 +53,26 @@ export class HuggingFaceFoodCategorization {
     'pea protein', 'soy protein', 'plant protein', 'vegan protein'
   ];
   
+  // Definitive vegetables - comprehensive coverage
+  private readonly DEFINITIVE_VEGETABLES = [
+    'broccoli', 'cauliflower', 'spinach', 'kale', 'lettuce', 'cabbage', 'brussels sprouts',
+    'asparagus', 'green beans', 'carrots', 'celery', 'cucumber', 'zucchini', 'squash',
+    'bell pepper', 'peppers', 'onion', 'garlic', 'tomato', 'tomatoes', 'eggplant',
+    'mushrooms', 'artichoke', 'beets', 'radish', 'turnip', 'parsnip', 'bok choy',
+    'collard greens', 'swiss chard', 'arugula', 'watercress', 'endive', 'radicchio',
+    'leeks', 'scallions', 'shallots', 'ginger', 'fennel', 'okra', 'peas', 'snap peas'
+  ];
+  
+  // Definitive fruits - comprehensive coverage
+  private readonly DEFINITIVE_FRUITS = [
+    'apple', 'banana', 'orange', 'lemon', 'lime', 'grapefruit', 'berries',
+    'strawberry', 'strawberries', 'blueberry', 'blueberries', 'raspberry', 'raspberries',
+    'blackberry', 'blackberries', 'cranberry', 'cranberries', 'grape', 'grapes',
+    'watermelon', 'cantaloupe', 'honeydew', 'melon', 'pineapple', 'mango', 'papaya',
+    'peach', 'plum', 'nectarine', 'apricot', 'cherry', 'cherries', 'pear', 'kiwi',
+    'pomegranate', 'fig', 'date', 'prune', 'raisin', 'coconut meat', 'guava', 'passion fruit'
+  ];
+  
   constructor() {
     // Check both client-side (NEXT_PUBLIC_) and server-side environment variables
     this.apiKey = process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY || process.env.HUGGINGFACE_API_KEY || '';
@@ -186,6 +206,32 @@ export class HuggingFaceFoodCategorization {
       }
     }
 
+    // Check for definitive vegetables
+    for (const term of this.DEFINITIVE_VEGETABLES) {
+      const regex = new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      if (regex.test(fullText)) {
+        return {
+          category: 'vegetables',
+          confidence: 0.99,
+          method: 'regex',
+          reasoning: `DEFINITIVE: "${term}" detected - vegetable`
+        };
+      }
+    }
+
+    // Check for definitive fruits
+    for (const term of this.DEFINITIVE_FRUITS) {
+      const regex = new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      if (regex.test(fullText)) {
+        return {
+          category: 'fruits',
+          confidence: 0.99,
+          method: 'regex',
+          reasoning: `DEFINITIVE: "${term}" detected - fruit`
+        };
+      }
+    }
+
     return null; // No definitive match found, proceed to AI
   }
 
@@ -205,16 +251,17 @@ export class HuggingFaceFoodCategorization {
         inputs: foodText,
         parameters: {
           candidate_labels: [
-            'meat chicken beef pork lamb turkey eggs',
-            'fish seafood salmon tuna sardines anchovies',
-            'plant protein tofu beans lentils vegan',
-            'nuts seeds almonds walnuts healthy fats',
-            'vegetables greens broccoli spinach produce',
-            'fruits berries apple banana',
-            'grains bread rice pasta carbohydrates',
-            'dairy milk cheese yogurt',
-            'processed snacks supplements other'
-          ]
+            'meat and poultry',
+            'fish and seafood',
+            'plant-based protein',
+            'nuts and seeds',
+            'vegetables',
+            'fruits',
+            'grains and carbohydrates',
+            'dairy products',
+            'other foods'
+          ],
+          multi_label: false
         }
       })
     });
@@ -323,7 +370,8 @@ export class HuggingFaceFoodCategorization {
     const category = this.mapLabelToCategory(topLabel);
     
     // If confidence is too low, use fallback
-    if (confidence < 0.6) {
+    // Lower threshold since we have definitive keyword detection as Layer 1
+    if (confidence < 0.4) {
       console.warn(`Low confidence (${confidence}) for ${food.name}, using fallback`);
       return this.fallbackCategorization(food);
     }
@@ -341,15 +389,15 @@ export class HuggingFaceFoodCategorization {
    */
   private mapLabelToCategory(label: string): string {
     const labelMap: Record<string, string> = {
-      'meat chicken beef pork lamb turkey eggs': 'meat',
-      'fish seafood salmon tuna sardines anchovies': 'seafood',
-      'plant protein tofu beans lentils vegan': 'plant-proteins',
-      'nuts seeds almonds walnuts healthy fats': 'healthy-fats',
-      'vegetables greens broccoli spinach produce': 'vegetables',
-      'fruits berries apple banana': 'fruits',
-      'grains bread rice pasta carbohydrates': 'healthy-carbs',
-      'dairy milk cheese yogurt': 'dairy',
-      'processed snacks supplements other': 'other'
+      'meat and poultry': 'meat',
+      'fish and seafood': 'seafood',
+      'plant-based protein': 'plant-proteins',
+      'nuts and seeds': 'healthy-fats',
+      'vegetables': 'vegetables',
+      'fruits': 'fruits',
+      'grains and carbohydrates': 'healthy-carbs',
+      'dairy products': 'dairy',
+      'other foods': 'other'
     };
 
     return labelMap[label] || 'other';
