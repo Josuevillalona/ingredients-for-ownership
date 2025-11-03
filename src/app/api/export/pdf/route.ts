@@ -51,7 +51,8 @@ export async function POST(request: NextRequest) {
     const filename = pdfGenerator.generateFilename(document.clientName);
 
     // Return PDF as downloadable response
-    return new NextResponse(pdfBuffer, {
+    // Convert Buffer to Uint8Array for NextResponse compatibility
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`,
