@@ -38,7 +38,8 @@ interface LlamaResponse {
 
 export class FoodRecommendationEngine {
   private apiKey: string;
-  private modelEndpoint = 'https://api-inference.huggingface.co/models/meta-llama/Llama-3.2-3B-Instruct';
+  // Using Mistral 7B - available on free tier and good for structured output
+  private modelEndpoint = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3';
 
   constructor() {
     this.apiKey = process.env.HUGGINGFACE_API_KEY || process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY || '';

@@ -10,7 +10,9 @@ import { db } from '@/lib/firebase/config';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { IngredientDocumentService } from '@/lib/firebase/ingredient-documents';
 import { FoodSelectionGuide, FoodItemData, CategoryData, FoodStatus } from '@/components/food';
+import { AIRecommendationPanel } from '@/components/plans/AIRecommendationPanel';
 import type { IngredientDocument, Food } from '@/lib/types';
+import type { AIRecommendationResponse } from '@/lib/types/ai-recommendations';
 
 export default function EditPlanPage() {
   return (
@@ -143,6 +145,33 @@ function EditPlanContent() {
       newStatuses.set(foodId, status);
       return newStatuses;
     });
+  };
+
+  // Handle AI recommendations
+  const handleAIRecommendations = (results: AIRecommendationResponse) => {
+    const categoryToStatusMap: Record<string, FoodStatus> = {
+      'blue': 'approved',
+      'yellow': 'neutral',
+      'red': 'avoid'
+    };
+
+    setFoodStatuses(prev => {
+      const newStatuses = new Map(prev);
+      results.recommendations.forEach(rec => {
+        const status = categoryToStatusMap[rec.category];
+        if (status) {
+          newStatuses.set(rec.foodId, status);
+        }
+      });
+      return newStatuses;
+    });
+
+    setTimeout(() => {
+      const foodListElement = document.querySelector('[data-food-list]');
+      if (foodListElement) {
+        foodListElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 500);
   };
 
   const updateDocument = async () => {
@@ -356,12 +385,21 @@ function EditPlanContent() {
         </div>
       </div>
 
+      {/* AI Recommendations Panel */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <AIRecommendationPanel
+          onRecommendationsGenerated={handleAIRecommendations}
+        />
+      </div>
+
       {/* Food Selection Guide */}
-      <FoodSelectionGuide
-        foods={getFoodItemData()}
-        categories={getCategoryData()}
-        onStatusChange={handleStatusChange}
-      />
+      <div data-food-list>
+        <FoodSelectionGuide
+          foods={getFoodItemData()}
+          categories={getCategoryData()}
+          onStatusChange={handleStatusChange}
+        />
+      </div>
     </div>
   );
 }
