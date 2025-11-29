@@ -1,8 +1,33 @@
 ﻿import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import type { IngredientDocument, IngredientSelection } from '@/lib/types/ingredient-document';
 import type { FoodItem } from '@/lib/types';
 import { getPDFCategoryConfig } from './category-mapping';
+import path from 'path';
+import fs from 'fs';
+
+// Register fonts lazily on first use
+let fontsRegistered = false;
+
+function registerFonts() {
+  if (fontsRegistered) return;
+
+  const publicDir = path.join(process.cwd(), 'public');
+  const fontsDir = path.join(publicDir, 'fonts');
+
+  Font.register({
+    family: 'Prompt',
+    fonts: [
+      { src: path.join(fontsDir, 'Prompt-Regular.ttf') },
+      { src: path.join(fontsDir, 'Prompt-Bold.ttf'), fontWeight: 'bold' },
+      { src: path.join(fontsDir, 'Prompt-Italic.ttf'), fontStyle: 'italic' },
+      { src: path.join(fontsDir, 'Prompt-Medium.ttf'), fontWeight: 500 },
+      { src: path.join(fontsDir, 'Prompt-SemiBold.ttf'), fontWeight: 600 },
+    ]
+  });
+
+  fontsRegistered = true;
+}
 
 // Brand colors from your Tailwind config
 const BRAND_COLORS = {
@@ -11,168 +36,156 @@ const BRAND_COLORS = {
   white: '#FDFDFD',
   cream: '#FFF7EF',
   blue: {
-    bg: '#DBEAFE',
-    text: '#1E40AF',
-    border: '#BFDBFE'
+    text: '#5B9BD5', // Adjusted to match example
+    dot: '#5B9BD5'
   },
   yellow: {
-    bg: '#FEF3C7',
-    text: '#92400E',
-    border: '#FDE68A'
+    text: '#FFC000', // Adjusted to match example
+    dot: '#FFC000'
   },
   red: {
-    bg: '#FEE2E2',
-    text: '#991B1B',
-    border: '#FECACA'
+    text: '#FF0000', // Adjusted to match example
+    dot: '#FF0000'
   }
 };
 
 const styles = StyleSheet.create({
   page: {
     backgroundColor: BRAND_COLORS.white,
-    padding: 30,
-    fontFamily: 'Helvetica'
+    padding: 20,
+    fontFamily: 'Prompt',
+    position: 'relative'
+  },
+  background: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    minWidth: '100%',
+    minHeight: '100%',
+    height: '100%',
+    width: '100%',
+    opacity: 0.15,
+    zIndex: -1,
+    objectFit: 'cover'
   },
   header: {
-    marginBottom: 20,
-    borderBottomWidth: 2,
-    borderBottomColor: BRAND_COLORS.gold,
-    paddingBottom: 15
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    marginTop: 5
   },
-  title: {
-    fontSize: 24,
+  headerLeft: {
+    flexDirection: 'column'
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 3
+  },
+  titleMain: {
+    fontSize: 20,
     fontWeight: 'bold',
     color: BRAND_COLORS.dark,
-    textAlign: 'center',
-    marginBottom: 5,
-    letterSpacing: 1
+    letterSpacing: 0.5,
+    marginRight: 4
+  },
+  titleSub: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: BRAND_COLORS.gold,
+    letterSpacing: 0.5
   },
   subtitle: {
-    fontSize: 14,
-    color: BRAND_COLORS.gold,
-    textAlign: 'center',
-    marginBottom: 5
+    fontSize: 9,
+    color: BRAND_COLORS.dark,
   },
   clientName: {
-    fontSize: 16,
-    color: BRAND_COLORS.dark,
-    textAlign: 'center',
-    fontWeight: 'bold'
+    fontSize: 11,
+    fontWeight: 600,
+    color: BRAND_COLORS.gold,
+    marginTop: 4,
+    letterSpacing: 0.5
+  },
+  logo: {
+    width: 80,
+    height: 'auto'
   },
   legendSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
-    paddingVertical: 10,
-    backgroundColor: BRAND_COLORS.cream,
-    borderRadius: 5
+    marginBottom: 10,
+    paddingVertical: 3,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: BRAND_COLORS.gold,
+    flexDirection: 'column'
   },
   legendItem: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+    marginBottom: 1
   },
-  legendIndicator: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    marginRight: 5
+  legendDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    marginRight: 4
   },
   legendText: {
-    fontSize: 9
+    fontSize: 7,
+    color: '#444'
   },
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 20
   },
   categoryColumn: {
-    borderWidth: 1,
-    borderColor: BRAND_COLORS.gold,
-    borderRadius: 3,
-    padding: 8,
     marginRight: 8,
-    marginBottom: 8
+    marginBottom: 10
   },
   categoryHeader: {
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: 'bold',
-    color: BRAND_COLORS.dark,
+    color: BRAND_COLORS.white,
+    backgroundColor: BRAND_COLORS.dark,
+    padding: 3,
     textAlign: 'center',
-    marginBottom: 3,
-    borderBottomWidth: 1,
-    borderBottomColor: BRAND_COLORS.gold,
-    paddingBottom: 3
-  },
-  categoryDescription: {
-    fontSize: 7,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 8,
-    fontStyle: 'italic'
+    marginBottom: 3
   },
   foodItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 3,
-    padding: 3,
-    borderRadius: 2
+    marginBottom: 2.5,
+    paddingLeft: 1
   },
-  foodItemBlue: {
-    backgroundColor: BRAND_COLORS.blue.bg
+  dot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    marginRight: 6
   },
-  foodItemYellow: {
-    backgroundColor: BRAND_COLORS.yellow.bg
-  },
-  foodItemRed: {
-    backgroundColor: BRAND_COLORS.red.bg
-  },
-  colorIndicator: {
-    fontSize: 8,
-    fontWeight: 'bold',
-    marginRight: 5,
-    minWidth: 15
-  },
-  colorIndicatorBlue: {
-    color: BRAND_COLORS.blue.text
-  },
-  colorIndicatorYellow: {
-    color: BRAND_COLORS.yellow.text
-  },
-  colorIndicatorRed: {
-    color: BRAND_COLORS.red.text
+  checkbox: {
+    width: 7,
+    height: 7,
+    borderWidth: 0.4,
+    borderColor: '#999',
+    marginLeft: 4
   },
   foodName: {
-    fontSize: 8,
+    fontSize: 7,
+    color: BRAND_COLORS.dark,
     flex: 1
   },
-  foodNameBlue: {
-    color: BRAND_COLORS.blue.text
-  },
-  foodNameYellow: {
-    color: BRAND_COLORS.yellow.text
-  },
-  foodNameRed: {
-    color: BRAND_COLORS.red.text
-  },
   footer: {
-    marginTop: 20,
-    paddingTop: 15,
-    borderTopWidth: 1,
-    borderTopColor: BRAND_COLORS.gold
-  },
-  instructionsTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: BRAND_COLORS.dark,
-    marginBottom: 8
-  },
-  instructionItem: {
-    fontSize: 9,
-    color: '#333',
-    marginBottom: 4
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    paddingTop: 6
   },
   coachInfo: {
-    marginTop: 15,
-    fontSize: 9,
+    fontSize: 7,
     color: '#666',
     textAlign: 'center'
   }
@@ -204,102 +217,112 @@ export const IngredientPDFTemplate: React.FC<PDFTemplateProps> = ({
   coachContact,
   columns = 3
 }) => {
+  // Register fonts
+  registerFonts();
+
+  // Load assets and convert to base64 data URIs
+  const publicDir = path.join(process.cwd(), 'public');
+
+  // Read and encode background image
+  const backgroundPath = path.join(publicDir, 'PDF-background.png');
+  const backgroundBuffer = fs.readFileSync(backgroundPath);
+  const backgroundBase64 = `data:image/png;base64,${backgroundBuffer.toString('base64')}`;
+
+  // Read and encode logo
+  const logoPath = path.join(publicDir, 'OI logos', 'Normal Light (1).png');
+  const logoBuffer = fs.readFileSync(logoPath);
+  const logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+
   // Organize ingredients by category
   const organizedCategories = organizeIngredientsByCategory(document, foods);
-  
-  // Calculate column width based on number of columns
-  const columnWidth = `${(100 / columns) - 2}%`;
+
+  // Calculate column width
+  const columnWidth = `${100 / columns}%`;
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size="LETTER" orientation="landscape" style={styles.page}>
+        {/* Background Image */}
+        <Image
+          src={backgroundBase64}
+          style={styles.background}
+        />
+
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>INGREDIENTS FOR OWNERSHIP</Text>
-          <Text style={styles.subtitle}>Your Personalized Nutrition Guide</Text>
-          <Text style={styles.clientName}>{document.clientName}</Text>
-        </View>
-
-        {/* Color Legend */}
-        <View style={styles.legendSection}>
-          <View style={styles.legendItem}>
-            <Text style={[styles.legendIndicator, styles.colorIndicatorBlue]}>(B) Blue Foods</Text>
-            <Text style={styles.legendText}>Unlimited</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <Text style={[styles.legendIndicator, styles.colorIndicatorYellow]}>(Y) Yellow Foods</Text>
-            <Text style={styles.legendText}>Moderate</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <Text style={[styles.legendIndicator, styles.colorIndicatorRed]}>(R) Red Foods</Text>
-            <Text style={styles.legendText}>Limited</Text>
-          </View>
-        </View>
-
-        {/* Category Grid */}
-        <View style={styles.categoryGrid}>
-          {organizedCategories.map((category) => (
-            <View key={category.categoryId} style={[styles.categoryColumn, { width: columnWidth }]}>
-              <Text style={styles.categoryHeader}>{category.displayName}</Text>
-              {category.description && (
-                <Text style={styles.categoryDescription}>{category.description}</Text>
-              )}
-              
-              {category.ingredients.map(({ ingredient, food }, idx) => {
-                const colorCode = ingredient.colorCode || 'blue';
-                
-                // Build style arrays - use type assertion for React PDF compatibility
-                const foodItemStyle: any[] = [styles.foodItem];
-                if (colorCode === 'blue') foodItemStyle.push(styles.foodItemBlue);
-                if (colorCode === 'yellow') foodItemStyle.push(styles.foodItemYellow);
-                if (colorCode === 'red') foodItemStyle.push(styles.foodItemRed);
-                
-                const indicatorStyle: any[] = [styles.colorIndicator];
-                if (colorCode === 'blue') indicatorStyle.push(styles.colorIndicatorBlue);
-                if (colorCode === 'yellow') indicatorStyle.push(styles.colorIndicatorYellow);
-                if (colorCode === 'red') indicatorStyle.push(styles.colorIndicatorRed);
-                
-                const nameStyle: any[] = [styles.foodName];
-                if (colorCode === 'blue') nameStyle.push(styles.foodNameBlue);
-                if (colorCode === 'yellow') nameStyle.push(styles.foodNameYellow);
-                if (colorCode === 'red') nameStyle.push(styles.foodNameRed);
-
-                return (
-                  <View key={`${ingredient.foodId}-${idx}`} style={foodItemStyle}>
-                    <Text style={indicatorStyle}>
-                      {colorCode === 'blue' ? '(B)' : colorCode === 'yellow' ? '(Y)' : '(R)'}
-                    </Text>
-                    <Text style={nameStyle}>{food.name}</Text>
-                  </View>
-                );
-              })}
+          <View style={styles.headerLeft}>
+            <View style={styles.titleRow}>
+              <Text style={styles.titleMain}>INGREDIENTS FOR</Text>
+              <Text style={styles.titleSub}>OWNERSHIP</Text>
             </View>
-          ))}
+            <Text style={styles.subtitle}>Your Personalized Guide to Make Therapeutic Food & Beverage Choices</Text>
+            <Text style={styles.clientName}>{document.clientName}</Text>
+          </View>
+          <Image
+            src={logoBase64}
+            style={styles.logo}
+          />
         </View>
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.instructionsTitle}>How to Use This Guide:</Text>
-          <Text style={styles.instructionItem}>
-            <Text style={{ fontWeight: 'bold' }}>Blue Foods:</Text> Eat freely as the foundation of your meals
-          </Text>
-          <Text style={styles.instructionItem}>
-            <Text style={{ fontWeight: 'bold' }}>Yellow Foods:</Text> Include in appropriate portions for balanced nutrition
-          </Text>
-          <Text style={styles.instructionItem}>
-            <Text style={{ fontWeight: 'bold' }}>Red Foods:</Text> Enjoy occasionally and in moderation
-          </Text>
-          
-          {(coachName || coachContact) && (
-            <Text style={styles.coachInfo}>
-              {coachName && `Your Coach: ${coachName}`}
-              {coachName && coachContact && ' | '}
-              {coachContact && coachContact}
-            </Text>
-          )}
+  {/* Legend */ }
+  <View style={styles.legendSection}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: '#81D4FA' }]} />
+            <Text style={styles.legendText}>Therapeutic; offers specific nutrients or compounds that benefit your body's unique needs</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: '#FFC000' }]} />
+            <Text style={styles.legendText}>Healthful; can be included as part of your balanced, whole-food eating pattern</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: '#FF5252' }]} />
+            <Text style={styles.legendText}>Best consumed only occasionally and/or in smaller, moderate amounts</Text>
+          </View>
         </View>
-      </Page>
-    </Document>
+
+  {/* Category Grid */ }
+  < View style = { styles.categoryGrid } >
+  {
+    organizedCategories.map((category) => (
+      <View key={category.categoryId} style={[styles.categoryColumn, { width: columnWidth }]}>
+        <Text style={styles.categoryHeader}>{category.displayName}</Text>
+
+        {category.ingredients.map(({ ingredient, food }, idx) => {
+          const colorCode = ingredient.colorCode || 'blue';
+          let dotColor = BRAND_COLORS.blue.dot;
+          if (colorCode === 'yellow') dotColor = BRAND_COLORS.yellow.dot;
+          if (colorCode === 'red') dotColor = BRAND_COLORS.red.dot;
+
+          // Map to the example colors
+          if (colorCode === 'blue') dotColor = '#81D4FA';
+          if (colorCode === 'yellow') dotColor = '#FFC000';
+          if (colorCode === 'red') dotColor = '#FF5252';
+
+          return (
+            <View key={`${ingredient.foodId}-${idx}`} style={styles.foodItem}>
+              <View style={[styles.dot, { backgroundColor: dotColor }]} />
+              <Text style={styles.foodName}>{food.name.toUpperCase()}</Text>
+              <View style={styles.checkbox} />
+            </View>
+          );
+        })}
+      </View>
+    ))
+  }
+        </View >
+
+  {/* Footer */ }
+  < View style = { styles.footer } >
+    {(coachName || coachContact) && (
+      <Text style={styles.coachInfo}>
+        {coachName && `Your Coach: ${coachName}`}
+        {coachName && coachContact && ' | '}
+        {coachContact && coachContact}
+      </Text>
+    )}
+        </View >
+      </Page >
+    </Document >
   );
 };
 
@@ -321,7 +344,7 @@ function organizeIngredientsByCategory(
 
       // Determine category (use AI category or fallback to 'other')
       const categoryId = determineFoodCategory(food);
-      
+
       if (!categoryMap.has(categoryId)) {
         const config = getPDFCategoryConfig(categoryId);
         categoryMap.set(categoryId, {
@@ -366,7 +389,7 @@ function determineFoodCategory(food: FoodItem): string {
 
   // Fallback: categorize based on tags
   const tags = food.tags.map(tag => tag.toLowerCase());
-  
+
   if (tags.some(tag => tag.includes('meat') || tag.includes('poultry'))) return 'meat-poultry';
   if (tags.some(tag => tag.includes('fish') || tag.includes('seafood'))) return 'seafood';
   if (tags.some(tag => tag.includes('egg') || tag.includes('dairy'))) return 'eggs-dairy';
@@ -375,6 +398,6 @@ function determineFoodCategory(food: FoodItem): string {
   if (tags.some(tag => tag.includes('nut') || tag.includes('seed'))) return 'nuts-seeds';
   if (tags.some(tag => tag.includes('vegetable'))) return 'vegetables';
   if (tags.some(tag => tag.includes('fruit'))) return 'fruits';
-  
+
   return 'other';
 }

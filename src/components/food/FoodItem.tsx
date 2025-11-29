@@ -13,7 +13,12 @@ export function FoodItem({ food, onStatusChange }: FoodItemProps) {
   const statusConfig = statusColors[currentStatus];
 
   const handleStatusClick = (status: FoodStatus) => {
-    onStatusChange(food.id, status);
+    // If clicking the same status, deselect it (set to 'none')
+    if (currentStatus === status) {
+      onStatusChange(food.id, 'none');
+    } else {
+      onStatusChange(food.id, status);
+    }
   };
 
   return (

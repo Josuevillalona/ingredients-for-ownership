@@ -210,9 +210,9 @@ function ViewPlanContent() {
             if (colorFoods.length === 0) return null;
 
             const colorConfig = {
-              blue: { name: 'Recommended Foods (Blue)', bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', badge: 'bg-blue-500' },
-              yellow: { name: 'Moderate Foods (Yellow)', bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-800', badge: 'bg-yellow-500' },
-              red: { name: 'Foods to Avoid (Red)', bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800', badge: 'bg-red-500' }
+              blue: { name: 'Recommended Foods (Blue)', bg: 'bg-[#81D4FA]/10', border: 'border-[#81D4FA]/30', text: 'text-[#5B9BD5]', badge: 'bg-[#81D4FA]' },
+              yellow: { name: 'Moderate Foods (Yellow)', bg: 'bg-[#FFC000]/10', border: 'border-[#FFC000]/30', text: 'text-[#D4A000]', badge: 'bg-[#FFC000]' },
+              red: { name: 'Foods to Avoid (Red)', bg: 'bg-[#FF5252]/10', border: 'border-[#FF5252]/30', text: 'text-[#D32F2F]', badge: 'bg-[#FF5252]' }
             };
 
             const config = colorConfig[color];

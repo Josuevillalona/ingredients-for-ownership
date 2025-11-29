@@ -21,30 +21,34 @@ export interface FoodSelectionState {
   selectedCategory?: string;
 }
 
-// Status color mapping for UI - matches final plan colors
+// Status color mapping for UI - matches PDF export colors exactly
 export const statusColors = {
   approved: {
-    bg: 'bg-blue-500',
-    border: 'border-blue-500',
-    text: 'text-blue-700',
-    label: 'Approved'
+    bg: 'bg-[#81D4FA]',
+    border: 'border-[#81D4FA]',
+    text: 'text-[#5B9BD5]',
+    label: 'Approved',
+    hex: '#81D4FA'
   },
   neutral: {
-    bg: 'bg-yellow-500',
-    border: 'border-yellow-500',
-    text: 'text-yellow-700',
-    label: 'Neutral'
+    bg: 'bg-[#FFC000]',
+    border: 'border-[#FFC000]',
+    text: 'text-[#D4A000]',
+    label: 'Neutral',
+    hex: '#FFC000'
   },
   avoid: {
-    bg: 'bg-red-500',
-    border: 'border-red-500',
-    text: 'text-red-700',
-    label: 'Avoid'
+    bg: 'bg-[#FF5252]',
+    border: 'border-[#FF5252]',
+    text: 'text-[#D32F2F]',
+    label: 'Avoid',
+    hex: '#FF5252'
   },
   none: {
     bg: 'bg-gray-200',
     border: 'border-gray-300',
     text: 'text-gray-500',
-    label: 'Not Set'
+    label: 'Not Set',
+    hex: '#E5E7EB'
   }
 } as const;

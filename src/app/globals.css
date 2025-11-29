@@ -3,29 +3,35 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  /* Brand Colors */
-  --brand-primary: #191B24;
-  --brand-accent: #BD9A60;
-  --brand-white: #FDFDFD;
-  --brand-cream: #FFF7EF;
-  --brand-black: #000000;
-  
-  /* Food Category Brand Integration */
-  --food-blue-brand: #3B82F6;
-  --food-yellow-brand: #F59E0B;
-  --food-red-brand: #EF4444;
-  
-  /* Interactive States */
-  --brand-hover: #A68755;
-  --brand-active: #8F7448;
-  --brand-focus: #BD9A60;
-}
+@layer base {
+  :root {
+    /* Brand Colors */
+    --brand-primary: #191B24;
+    --brand-accent: #BD9A60;
+    --brand-white: #FDFDFD;
+    --brand-cream: #FFF7EF;
+    --brand-black: #000000;
 
-body {
-  font-family: 'Prompt', system-ui, sans-serif;
-  background-color: var(--brand-cream);
-  color: var(--brand-primary);
+    /* Food Category Brand Integration */
+    --food-blue-brand: #3B82F6;
+    --food-yellow-brand: #F59E0B;
+    --food-red-brand: #EF4444;
+
+    /* Interactive States */
+    --brand-hover: #A68755;
+    --brand-active: #8F7448;
+    --brand-focus: #BD9A60;
+
+    /* Transition Tokens */
+    --transition-base: 200ms ease-in-out;
+    --transition-slow: 350ms ease-in-out;
+  }
+
+  body {
+    @apply bg-brand-cream text-brand-dark antialiased;
+    font-family: 'Prompt', system-ui, sans-serif;
+    scroll-behavior: smooth;
+  }
 }
 
 /* Custom scrollbar for mobile webkit */

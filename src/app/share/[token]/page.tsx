@@ -28,11 +28,11 @@ export default function SharedIngredientPage() {
   const getColorBadgeClass = (colorCode: string | null) => {
     switch (colorCode) {
       case 'blue':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-[#81D4FA]/10 text-[#5B9BD5] border-[#81D4FA]/30';
       case 'yellow':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-[#FFC000]/10 text-[#D4A000] border-[#FFC000]/30';
       case 'red':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-[#FF5252]/10 text-[#D32F2F] border-[#FF5252]/30';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }

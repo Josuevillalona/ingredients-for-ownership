@@ -7,6 +7,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { IngredientDocumentService } from '@/lib/firebase/ingredient-documents';
 import type { IngredientDocument } from '@/lib/types';
+import { Card } from '@/components/ui/Card';
 
 export default function DashboardPage() {
   return (
@@ -69,7 +70,7 @@ function DashboardContent() {
 
   const deletePlan = async (planId: string) => {
     if (!user) return;
-    
+
     if (confirm('Are you sure you want to delete this plan? This action cannot be undone.')) {
       try {
         await ingredientDocumentService.deleteDocument(planId, user.uid);
@@ -98,7 +99,7 @@ function DashboardContent() {
   return (
     <div className="min-h-screen bg-brand-cream">
       {/* Header */}
-      <header className="bg-brand-dark shadow-lg border-b border-brand-gold/20">
+      <header className="bg-brand-dark shadow-soft-lg border-b border-brand-gold/20">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
@@ -116,7 +117,7 @@ function DashboardContent() {
                 )}
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               <Link href="/dashboard/plans/create">
                 <Button variant="primary">
@@ -124,23 +125,23 @@ function DashboardContent() {
                 </Button>
               </Link>
               <Link href="/dashboard/foods">
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant="secondary"
                   className="text-brand-white border-brand-white/20 hover:bg-brand-white/10"
                 >
                   Manage Foods
                 </Button>
               </Link>
               <Link href="/dashboard/profile">
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant="secondary"
                   className="text-brand-white border-brand-white/20 hover:bg-brand-white/10"
                 >
                   Profile
                 </Button>
               </Link>
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 onClick={handleSignOut}
                 className="text-brand-white border-brand-white/20 hover:bg-brand-white/10"
               >
@@ -155,34 +156,34 @@ function DashboardContent() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-brand-white rounded-xl p-6 shadow-sm border border-brand-gold/20">
+          <Card hover>
             <h3 className="font-prompt font-semibold text-brand-dark mb-2">Total Plans</h3>
             <p className="text-3xl font-prompt font-bold text-brand-gold">
               {isLoading ? '...' : stats.totalPlans}
             </p>
-          </div>
-          <div className="bg-brand-white rounded-xl p-6 shadow-sm border border-brand-gold/20">
+          </Card>
+          <Card hover>
             <h3 className="font-prompt font-semibold text-brand-dark mb-2">Published</h3>
             <p className="text-3xl font-prompt font-bold text-green-600">
               {isLoading ? '...' : stats.publishedPlans}
             </p>
-          </div>
-          <div className="bg-brand-white rounded-xl p-6 shadow-sm border border-brand-gold/20">
+          </Card>
+          <Card hover>
             <h3 className="font-prompt font-semibold text-brand-dark mb-2">Drafts</h3>
             <p className="text-3xl font-prompt font-bold text-yellow-600">
               {isLoading ? '...' : stats.draftPlans}
             </p>
-          </div>
-          <div className="bg-brand-white rounded-xl p-6 shadow-sm border border-brand-gold/20">
+          </Card>
+          <Card hover>
             <h3 className="font-prompt font-semibold text-brand-dark mb-2">Status</h3>
             <p className="text-lg font-prompt font-bold text-brand-gold">
               {isLoading ? 'Loading...' : stats.recentActivity}
             </p>
-          </div>
+          </Card>
         </div>
 
         {/* Plans Management */}
-        <div className="bg-brand-white rounded-xl shadow-sm border border-brand-gold/20">
+        <Card>
           {/* Plans Header */}
           <div className="p-6 border-b border-brand-gold/20">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -194,7 +195,7 @@ function DashboardContent() {
                   Manage your client nutrition plans
                 </p>
               </div>
-              
+
               {/* Search Bar */}
               <div className="flex items-center space-x-3">
                 <div className="relative">
@@ -254,7 +255,7 @@ function DashboardContent() {
                   {searchTerm ? 'No Plans Found' : 'No Plans Yet'}
                 </h3>
                 <p className="text-brand-dark/60 font-prompt mb-4">
-                  {searchTerm 
+                  {searchTerm
                     ? `No plans found matching "${searchTerm}". Try a different search term.`
                     : 'Create your first nutrition plan to get started.'
                   }
@@ -272,11 +273,11 @@ function DashboardContent() {
                 {filteredPlans.map((plan) => {
                   const selectedFoodsCount = plan.ingredients.filter(i => i.isSelected).length;
                   const totalFoodsCount = plan.ingredients.length;
-                  
+
                   return (
                     <div
                       key={plan.id}
-                      className="border border-brand-gold/20 rounded-lg p-4 hover:border-brand-gold hover:bg-brand-cream/30 transition-all duration-200"
+                      className="border border-brand-gold/20 rounded-2xl p-4 hover:border-brand-gold hover:bg-brand-cream/30 transition-all duration-[var(--transition-base)] hover:shadow-soft"
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex-1">
@@ -284,15 +285,14 @@ function DashboardContent() {
                             <h3 className="font-prompt font-bold text-lg text-brand-dark">
                               {plan.clientName}'s Nutrition Plan
                             </h3>
-                            <span className={`px-2 py-1 rounded-full text-xs font-prompt font-medium ${
-                              plan.status === 'published' 
-                                ? 'bg-green-100 text-green-800' 
+                            <span className={`px-2 py-1 rounded-full text-xs font-prompt font-medium ${plan.status === 'published'
+                                ? 'bg-green-100 text-green-800'
                                 : 'bg-yellow-100 text-yellow-800'
-                            }`}>
+                              }`}>
                               {plan.status === 'published' ? 'Published' : 'Draft'}
                             </span>
                           </div>
-                          
+
                           <div className="flex items-center space-x-4 text-sm text-brand-dark/60 font-prompt">
                             <span>
                               Created: {plan.createdAt.toDate().toLocaleDateString()}
@@ -305,7 +305,7 @@ function DashboardContent() {
                             </span>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center space-x-2">
                           <Link href={`/dashboard/plans/${plan.id}`}>
                             <Button variant="secondary" size="sm">
@@ -317,8 +317,8 @@ function DashboardContent() {
                               Edit
                             </Button>
                           </Link>
-                          <Button 
-                            variant="secondary" 
+                          <Button
+                            variant="secondary"
                             size="sm"
                             onClick={() => deletePlan(plan.id)}
                             className="text-red-600 hover:bg-red-50 border-red-200"
@@ -333,11 +333,11 @@ function DashboardContent() {
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* Quick Actions */}
         {!isLoading && filteredPlans.length > 0 && (
-          <div className="mt-8 bg-brand-white rounded-xl p-6 shadow-sm border border-brand-gold/20">
+          <Card>
             <h2 className="font-prompt font-bold text-xl text-brand-dark mb-6">Quick Actions</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <Link href="/dashboard/plans/create">
@@ -352,7 +352,7 @@ function DashboardContent() {
                 </div>
               </Link>
 
-              <div 
+              <div
                 onClick={() => {
                   const shareUrl = `${window.location.origin}/share/${filteredPlans[0]?.shareToken}`;
                   navigator.clipboard.writeText(shareUrl);
@@ -381,7 +381,7 @@ function DashboardContent() {
                 </div>
               </Link>
             </div>
-          </div>
+          </Card>
         )}
       </main>
     </div>

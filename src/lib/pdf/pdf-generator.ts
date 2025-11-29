@@ -32,7 +32,7 @@ export class PDFGenerator {
 
     // Generate PDF blob - the template returns a Document component
     const blob = await pdf(templateElement as any).toBlob();
-    
+
     // Convert blob to buffer
     return Buffer.from(await blob.arrayBuffer());
   }
@@ -45,9 +45,10 @@ export class PDFGenerator {
       i => i.isSelected && i.colorCode
     ).length;
 
-    if (selectedCount <= 25) return 2;      // Few ingredients: larger, more readable
-    if (selectedCount <= 60) return 3;      // Medium: balanced layout
-    return 4;                                // Many: compact grid
+    if (selectedCount <= 20) return 3;       // Few ingredients: 3 columns
+    if (selectedCount <= 40) return 4;       // Medium: 4 columns
+    if (selectedCount <= 80) return 5;       // Many: 5 columns
+    return 6;                                 // Very many: 6 columns
   }
 
   /**
@@ -58,7 +59,7 @@ export class PDFGenerator {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
-    
+
     const date = new Date().toISOString().split('T')[0];
     return `nutrition-plan-${sanitized}-${date}.pdf`;
   }

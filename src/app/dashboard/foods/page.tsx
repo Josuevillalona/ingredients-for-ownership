@@ -380,19 +380,18 @@ export default function FoodsPage() {
                 {/* FDC Food Search */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">USDA Food Database</h3>
-                      <p className="text-sm text-gray-600">Search and save foods from the official USDA database</p>
-                    </div>
-                    <Button 
-                      variant="secondary" 
+                    <h3 className="text-lg font-semibold text-brand-dark font-prompt">
+                      Search Food Database
+                    </h3>
+                    <Button
+                      variant="secondary"
                       onClick={() => setViewMode('add-manual')}
                       className="whitespace-nowrap"
                     >
-                      Add Manually
+                      + Add Manually
                     </Button>
                   </div>
-                  
+
                   <FDCFoodSearch
                     onFoodSelect={handleFoodPreview}
                     onFoodQuickSave={handleFoodAdded}

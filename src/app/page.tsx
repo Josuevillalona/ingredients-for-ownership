@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 
 export default function HomePage() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center">
           {/* Brand Logo */}
-          <div className="w-24 h-24 bg-brand-gold rounded-full mx-auto mb-8 flex items-center justify-center">
+          <div className="w-24 h-24 bg-brand-gold rounded-full mx-auto mb-8 flex items-center justify-center shadow-soft-lg">
             <span className="text-brand-white font-prompt font-bold text-4xl">I</span>
           </div>
 
@@ -28,9 +29,9 @@ export default function HomePage() {
             Ingredients for{' '}
             <span className="text-brand-gold">Ownership</span>
           </h1>
-          
+
           <p className="text-xl text-brand-dark/70 mb-8 max-w-3xl mx-auto font-prompt">
-            Replace inefficient PDF workflows with AI-assisted nutritional plan creation. 
+            Replace inefficient PDF workflows with AI-assisted nutritional plan creation.
             Create professional plans in minutes, not hours.
           </p>
 
@@ -73,7 +74,7 @@ export default function HomePage() {
               icon: '🔗'
             }
           ].map((feature, index) => (
-            <div key={index} className="bg-brand-white rounded-xl p-6 shadow-sm border border-brand-gold/20">
+            <Card key={index} hover>
               <div className="text-4xl mb-4">{feature.icon}</div>
               <h3 className="font-prompt font-semibold text-xl text-brand-dark mb-3">
                 {feature.title}
@@ -81,7 +82,7 @@ export default function HomePage() {
               <p className="text-brand-dark/60 font-prompt">
                 {feature.description}
               </p>
-            </div>
+            </Card>
           ))}
         </div>
       </div>

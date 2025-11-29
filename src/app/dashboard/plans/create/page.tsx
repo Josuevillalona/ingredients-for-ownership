@@ -323,15 +323,15 @@ function CreatePlanContent() {
               {/* Status Summary */}
               <div className="flex items-center space-x-6 text-sm font-prompt">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full" />
+                  <div className="w-3 h-3 bg-[#81D4FA] rounded-full" />
                   <span className="text-brand-dark">Approved: {statusSummary.approved}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full" />
+                  <div className="w-3 h-3 bg-[#FFC000] rounded-full" />
                   <span className="text-brand-dark">Neutral: {statusSummary.neutral}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full" />
+                  <div className="w-3 h-3 bg-[#FF5252] rounded-full" />
                   <span className="text-brand-dark">Avoid: {statusSummary.avoid}</span>
                 </div>
               </div>

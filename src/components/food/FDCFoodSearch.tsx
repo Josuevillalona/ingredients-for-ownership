@@ -7,7 +7,6 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useFDC } from '@/lib/hooks/useFDC';
-import { FoodColorBadge } from '@/components/ui/FoodColorBadge';
 import { Button } from '@/components/ui/Button';
 import type { FDCEnhancedFoodItem } from '@/lib/types/fdc';
 import type { FoodItem } from '@/lib/types';
@@ -53,7 +52,7 @@ export function FDCFoodSearch({
   const [quickSavingId, setQuickSavingId] = useState<number | null>(null);
   const [serviceAvailable, setServiceAvailable] = useState<boolean | null>(null);
   const [filters, setFilters] = useState<SearchFilters>({
-    dataType: ['Foundation', 'Branded'],
+    dataType: ['Foundation'],
     sortBy: 'lowercaseDescription.keyword',
     sortOrder: 'asc'
   });
@@ -154,19 +153,8 @@ export function FDCFoodSearch({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Search Header */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-center mb-2">
-          <div className="w-5 h-5 bg-blue-500 rounded-full mr-2"></div>
-          <h3 className="text-sm font-medium text-blue-800">Search USDA Food Database</h3>
-        </div>
-        <p className="text-sm text-blue-700">
-          Search from 300,000+ foods with automatic color categorization and nutritional information.
-        </p>
-      </div>
-
       {/* Search Input */}
-      <div className="flex flex-col space-y-3">
+      <div className="space-y-3">
         <div className="flex space-x-2">
           <input
             type="text"
@@ -174,58 +162,32 @@ export function FDCFoodSearch({
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Search for foods (e.g., 'chicken breast', 'quinoa', 'blueberries')"
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent"
             disabled={isLoading}
           />
           <Button
             onClick={handleSearch}
             disabled={isLoading || !query.trim()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            variant="primary"
           >
             {isLoading ? 'Searching...' : 'Search'}
           </Button>
           {(searchResults.length > 0 || query) && (
             <Button
               onClick={handleClear}
-              className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+              variant="secondary"
             >
               Clear
             </Button>
           )}
         </div>
 
-        {/* Search Filters */}
-        <div className="flex flex-wrap gap-3 text-sm">
-          <div className="flex items-center space-x-2">
-            <label className="text-gray-600">Data Type:</label>
-            <select
-              value={filters.dataType.join(',')}
-              onChange={(e) => setFilters(prev => ({
-                ...prev,
-                dataType: e.target.value.split(',').filter(Boolean)
-              }))}
-              className="border border-gray-300 rounded px-2 py-1"
-            >
-              <option value="Foundation,Branded">Foundation & Branded</option>
-              <option value="Foundation">Foundation Only</option>
-              <option value="Branded">Branded Only</option>
-              <option value="Survey">Survey Foods</option>
-            </select>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <label className="text-gray-600">Sort by:</label>
-            <select
-              value={filters.sortBy}
-              onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
-              className="border border-gray-300 rounded px-2 py-1"
-            >
-              <option value="lowercaseDescription.keyword">Name</option>
-              <option value="dataType.keyword">Type</option>
-              <option value="publishedDate">Date</option>
-            </select>
-          </div>
-        </div>
+        {/* Subtle help text */}
+        {!searchResults.length && !isLoading && (
+          <p className="text-sm text-gray-500">
+            Search the USDA database for accurate nutritional information
+          </p>
+        )}
       </div>
 
       {/* Error Display */}
@@ -302,9 +264,6 @@ function FDCFoodCard({ food, isSelected, onSelect, onQuickSave, onViewDetail, is
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2 mb-1">
-            <FoodColorBadge category={food.category || 'yellow'} size="sm">
-              {food.category || 'yellow'}
-            </FoodColorBadge>
             <h5 className="font-medium text-gray-900 truncate">
               {food.description}
             </h5>

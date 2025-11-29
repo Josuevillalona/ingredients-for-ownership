@@ -20,12 +20,16 @@ module.exports = {
           hover: '#A68755',     // Darker gold for hover
           active: '#8F7448',    // Even darker for active
           focus: '#BD9A60',     // Gold for focus rings
+          // Additional shades for depth
+          'gold-light': '#D4B883',
+          'gold-dark': '#A68755',
+          'dark-light': '#2A2D3A',
         },
         // Food category colors (maintaining existing system)
         food: {
           blue: {
             50: '#EFF6FF',
-            100: '#DBEAFE', 
+            100: '#DBEAFE',
             200: '#BFDBFE',
             500: '#3B82F6',
             600: '#2563EB',
@@ -62,6 +66,11 @@ module.exports = {
       spacing: {
         '18': '4.5rem',
         '88': '22rem',
+      },
+      boxShadow: {
+        'soft': '0 2px 8px rgba(25, 27, 36, 0.04), 0 1px 2px rgba(25, 27, 36, 0.06)',
+        'soft-lg': '0 4px 16px rgba(25, 27, 36, 0.08), 0 2px 4px rgba(25, 27, 36, 0.06)',
+        'glow': '0 0 0 3px rgba(189, 154, 96, 0.1)',
       },
     },
   },
