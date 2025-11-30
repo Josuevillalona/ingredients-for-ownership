@@ -1,6 +1,6 @@
 /**
  * AI Food Recommendation Engine
- * Uses Llama 3.2 3B via Hugging Face to generate personalized food recommendations
+ * Uses Mistral 7B Instruct via Hugging Face to generate personalized food recommendations
  * based on client health profile and goals.
  */
 
@@ -38,13 +38,16 @@ interface LlamaResponse {
 
 export class FoodRecommendationEngine {
   private apiKey: string;
-  // Using Mistral 7B - available on free tier and good for structured output
-  private modelEndpoint = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3';
+  // Using Groq API (OpenAI-compatible)
+  // Model: Llama 3.1 8B Instant - extremely fast, free tier with generous limits
+  private modelEndpoint = 'https://api.groq.com/openai/v1/chat/completions';
+  private model = 'llama-3.1-8b-instant';
+  private batchSize = 40; // Process foods in chunks to avoid context window limits
 
   constructor() {
-    this.apiKey = process.env.HUGGINGFACE_API_KEY || process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY || '';
+    this.apiKey = process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY || '';
     if (!this.apiKey) {
-      console.warn('⚠️ HUGGINGFACE_API_KEY not found. AI recommendations will not be available.');
+      console.warn('⚠️ GROQ_API_KEY not found. AI recommendations will not be available.');
     }
   }
 
@@ -75,8 +78,26 @@ export class FoodRecommendationEngine {
     });
 
     let aiRecommendations: FoodRecommendation[] = [];
+    const errors: Error[] = [];
+
     if (foodsNeedingAI.length > 0) {
-      aiRecommendations = await this.getAIRecommendations(clientProfile, foodsNeedingAI, quickToggles);
+      // Process in batches
+      for (let i = 0; i < foodsNeedingAI.length; i += this.batchSize) {
+        const batch = foodsNeedingAI.slice(i, i + this.batchSize);
+        try {
+          const batchResults = await this.getAIRecommendations(clientProfile, batch, quickToggles);
+          aiRecommendations = [...aiRecommendations, ...batchResults];
+        } catch (error) {
+          console.error(`Error processing batch ${i / this.batchSize + 1}:`, error);
+          errors.push(error instanceof Error ? error : new Error(String(error)));
+        }
+      }
+
+      // If we had foods to process but got 0 results, something went wrong.
+      // Don't fail silently.
+      if (aiRecommendations.length === 0 && errors.length > 0) {
+        throw new Error(`AI processing failed for all batches. Last error: ${errors[errors.length - 1].message}`);
+      }
     }
 
     // Combine hard rules + AI recommendations
@@ -94,35 +115,73 @@ export class FoodRecommendationEngine {
     const profileLower = clientProfile.toLowerCase();
     const results: FoodRecommendation[] = [];
 
+    // Helper to check for keywords while respecting exceptions
+    const hasKeywordWithException = (text: string, keywords: string[], exceptions: string[]): boolean => {
+      const lowerText = text.toLowerCase();
+      // Check if any keyword exists
+      const keywordMatch = keywords.some(k => lowerText.includes(k));
+      if (!keywordMatch) return false;
+
+      // Check if the match is actually an exception
+      const isException = exceptions.some(ex => lowerText.includes(ex));
+      return !isException;
+    };
+
     // Dairy intolerance/allergy
     const hasDairyIssue = profileLower.includes('dairy') ||
-                          profileLower.includes('lactose') ||
-                          quickToggles?.dairyFree;
+      profileLower.includes('lactose') ||
+      quickToggles?.dairyFree;
     if (hasDairyIssue) {
-      const dairyKeywords = ['milk', 'cheese', 'yogurt', 'dairy', 'cream', 'butter', 'whey'];
+      const dairyKeywords = ['milk', 'cheese', 'yogurt', 'dairy', 'cream', 'butter', 'whey', 'casein', 'ghee', 'goat', 'sheep'];
+
+      // "Safe Modifiers" - if any of these words appear in the food name, 
+      // we assume it's a non-dairy alternative (e.g. "Chestnut Milk", "Fruit Butter")
+      const safeDairyModifiers = [
+        'plant', 'vegan', 'dairy-free', 'non-dairy',
+        'nut', 'almond', 'cashew', 'walnut', 'pecan', 'pistachio', 'chestnut', 'hazelnut', 'macadamia', 'peanut',
+        'coconut', 'soy', 'oat', 'rice', 'hemp', 'flax', 'sunflower', 'pea',
+        'cocoa', 'shea', 'fruit', 'apple', 'pumpkin'
+      ];
+
       foods.forEach(food => {
         const foodText = `${food.name} ${food.description || ''}`.toLowerCase();
-        if (dairyKeywords.some(keyword => foodText.includes(keyword))) {
-          results.push({
-            foodId: food.id,
-            foodName: food.name,
-            category: 'red',
-            reasoning: 'Dairy intolerance/restriction noted - avoid to prevent digestive issues',
-            confidence: 0.99
+
+        const hasDairyKeyword = dairyKeywords.some(keyword => foodText.includes(keyword));
+
+        if (hasDairyKeyword) {
+          // Use regex with word boundaries to avoid false positives (e.g. "oat" matching "goat")
+          const hasSafeModifier = safeDairyModifiers.some(modifier => {
+            const regex = new RegExp(`\\b${modifier}\\b`, 'i');
+            return regex.test(foodText);
           });
+
+          if (!hasSafeModifier) {
+            results.push({
+              foodId: food.id,
+              foodName: food.name,
+              category: 'red',
+              reasoning: 'Dairy intolerance/restriction noted - avoid to prevent digestive issues',
+              confidence: 0.99
+            });
+          }
         }
       });
     }
 
     // Gluten intolerance/celiac
     const hasGlutenIssue = profileLower.includes('gluten') ||
-                           profileLower.includes('celiac') ||
-                           quickToggles?.glutenFree;
+      profileLower.includes('celiac') ||
+      quickToggles?.glutenFree;
     if (hasGlutenIssue) {
-      const glutenKeywords = ['wheat', 'bread', 'pasta', 'gluten', 'barley', 'rye'];
+      const glutenKeywords = ['wheat', 'bread', 'pasta', 'gluten', 'barley', 'rye', 'couscous', 'semolina', 'farro', 'spelt'];
+      const glutenExceptions = [
+        'gluten free', 'gluten-free', 'buckwheat', 'corn bread', 'rice pasta', 'almond flour bread',
+        'coconut flour bread', 'chickpea pasta', 'lentil pasta', 'quinoa pasta'
+      ];
+
       foods.forEach(food => {
-        const foodText = `${food.name} ${food.description || ''}`.toLowerCase();
-        if (glutenKeywords.some(keyword => foodText.includes(keyword))) {
+        const foodText = `${food.name} ${food.description || ''}`;
+        if (hasKeywordWithException(foodText, glutenKeywords, glutenExceptions)) {
           results.push({
             foodId: food.id,
             foodName: food.name,
@@ -136,17 +195,33 @@ export class FoodRecommendationEngine {
 
     // Specific food allergies
     const allergyPatterns = [
-      { keywords: ['peanut', 'peanuts'], reason: 'Peanut allergy noted' },
-      { keywords: ['tree nut', 'almond', 'walnut', 'cashew'], reason: 'Tree nut allergy noted' },
-      { keywords: ['shellfish', 'shrimp', 'crab', 'lobster'], reason: 'Shellfish allergy noted' },
-      { keywords: ['soy', 'tofu', 'tempeh'], reason: 'Soy allergy noted' },
+      {
+        keywords: ['peanut', 'peanuts'],
+        exceptions: [],
+        reason: 'Peanut allergy noted'
+      },
+      {
+        keywords: ['tree nut', 'almond', 'walnut', 'cashew', 'pecan', 'pistachio'],
+        exceptions: ['coconut', 'nutmeg', 'butternut'],
+        reason: 'Tree nut allergy noted'
+      },
+      {
+        keywords: ['shellfish', 'shrimp', 'crab', 'lobster', 'prawn', 'clam', 'mussel', 'oyster', 'scallop'],
+        exceptions: [],
+        reason: 'Shellfish allergy noted'
+      },
+      {
+        keywords: ['soy', 'tofu', 'tempeh', 'edamame', 'miso'],
+        exceptions: [],
+        reason: 'Soy allergy noted'
+      },
     ];
 
-    allergyPatterns.forEach(({ keywords, reason }) => {
+    allergyPatterns.forEach(({ keywords, exceptions, reason }) => {
       if (keywords.some(k => profileLower.includes(k))) {
         foods.forEach(food => {
-          const foodText = `${food.name} ${food.description || ''}`.toLowerCase();
-          if (keywords.some(keyword => foodText.includes(keyword))) {
+          const foodText = `${food.name} ${food.description || ''}`;
+          if (hasKeywordWithException(foodText, keywords, exceptions)) {
             results.push({
               foodId: food.id,
               foodName: food.name,
@@ -163,7 +238,7 @@ export class FoodRecommendationEngine {
   }
 
   /**
-   * Layer 2: Get AI recommendations using Llama 3.2
+   * Layer 2: Get AI recommendations using Mistral 7B
    */
   private async getAIRecommendations(
     clientProfile: string,
@@ -180,19 +255,26 @@ export class FoodRecommendationEngine {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            max_new_tokens: 8000, // Enough for 300+ foods
-            temperature: 0.2, // Low temperature for consistent, conservative recommendations
-            return_full_text: false,
-            top_p: 0.9
-          }
+          model: this.model,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a clinical nutrition expert. You provide food recommendations in valid JSON format only.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.2,
+          max_tokens: 4000,
+          response_format: { type: 'json_object' }
         })
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Hugging Face API error: ${response.status} - ${errorText}`);
+        throw new Error(`Groq API error: ${response.status} - ${errorText}`);
       }
 
       const result = await response.json();
@@ -205,7 +287,7 @@ export class FoodRecommendationEngine {
   }
 
   /**
-   * Build the prompt for Llama 3.2
+   * Build the prompt for Mistral 7B
    */
   private buildPrompt(
     clientProfile: string,
@@ -287,20 +369,15 @@ Return ONLY valid JSON in this exact format (no additional text):
    */
   private parseAIResponse(result: any, foods: FoodItem[]): FoodRecommendation[] {
     try {
-      // Hugging Face returns an array with generated text
-      const generatedText = Array.isArray(result) ? result[0]?.generated_text : result.generated_text;
+      // Groq uses OpenAI format: result.choices[0].message.content
+      const messageContent = result.choices?.[0]?.message?.content;
 
-      if (!generatedText) {
-        throw new Error('No generated text in response');
+      if (!messageContent) {
+        throw new Error('No message content in response');
       }
 
-      // Extract JSON from the response (might have extra text)
-      const jsonMatch = generatedText.match(/\{[\s\S]*"recommendations"[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('Could not find JSON in response');
-      }
-
-      const parsed: LlamaResponse = JSON.parse(jsonMatch[0]);
+      // Parse the JSON response
+      const parsed: LlamaResponse = JSON.parse(messageContent);
 
       if (!parsed.recommendations || !Array.isArray(parsed.recommendations)) {
         throw new Error('Invalid recommendations format');
@@ -311,9 +388,9 @@ Return ONLY valid JSON in this exact format (no additional text):
         .filter(rec => {
           // Validate each recommendation
           return rec.foodId &&
-                 ['blue', 'yellow', 'red'].includes(rec.category) &&
-                 rec.reasoning &&
-                 typeof rec.confidence === 'number';
+            ['blue', 'yellow', 'red'].includes(rec.category) &&
+            rec.reasoning &&
+            typeof rec.confidence === 'number';
         })
         .map(rec => {
           const food = foods.find(f => f.id === rec.foodId);
