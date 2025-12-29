@@ -49,7 +49,7 @@ function ProfileContent() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <div className="min-h-screen">
       {/* Header */}
       <header className="bg-brand-dark shadow-lg border-b border-brand-gold/20">
         <div className="max-w-4xl mx-auto px-4 py-6">
@@ -90,11 +90,10 @@ function ProfileContent() {
           </div>
 
           {message && (
-            <div className={`mb-6 p-4 rounded-lg ${
-              message.includes('successfully') 
+            <div className={`mb-6 p-4 rounded-lg ${message.includes('successfully')
                 ? 'bg-green-50 border border-green-200 text-green-700'
                 : 'bg-red-50 border border-red-200 text-red-700'
-            }`}>
+              }`}>
               <p className="font-prompt text-sm">{message}</p>
             </div>
           )}

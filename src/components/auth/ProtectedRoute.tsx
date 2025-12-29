@@ -10,8 +10,8 @@ interface ProtectedRouteProps {
   fallback?: React.ReactNode;
 }
 
-export function ProtectedRoute({ 
-  children, 
+export function ProtectedRoute({
+  children,
   redirectTo = '/login',
   fallback = <LoadingSpinner />
 }: ProtectedRouteProps) {
@@ -41,7 +41,7 @@ export function ProtectedRoute({
 // Loading spinner component
 function LoadingSpinner() {
   return (
-    <div className="min-h-screen bg-brand-cream flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="w-16 h-16 bg-brand-gold rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
           <span className="text-brand-white font-prompt font-bold text-2xl">I</span>

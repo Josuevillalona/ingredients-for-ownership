@@ -69,7 +69,7 @@ export default function SignupPage() {
   // Show loading screen while checking auth state
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-brand-cream flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-brand-gold rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
             <span className="text-brand-white font-prompt font-bold text-2xl">I</span>
@@ -86,7 +86,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-cream flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8">
         {/* Brand Header */}
         <div className="text-center">
@@ -181,10 +181,10 @@ export default function SignupPage() {
             </div>
 
             {/* Submit Button */}
-            <Button 
-              type="submit" 
-              variant="primary" 
-              size="lg" 
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
               isLoading={isLoading}
               className="w-full"
             >

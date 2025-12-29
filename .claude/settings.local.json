@@ -12,7 +12,10 @@
       "Bash(npx:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(dir /a .vscode)",
+      "Bash(dir /b /s:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []

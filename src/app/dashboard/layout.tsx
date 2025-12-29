@@ -5,14 +5,16 @@ export const metadata: Metadata = {
   description: 'Health coach dashboard for managing clients and nutrition plans',
 };
 
+import { ModernDashboardLayout } from '@/components/layout/ModernDashboardLayout';
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <ModernDashboardLayout>
       {children}
-    </div>
+    </ModernDashboardLayout>
   );
 }

@@ -33,7 +33,7 @@ function registerFonts() {
 const BRAND_COLORS = {
   dark: '#191B24',
   gold: '#BD9A60',
-  white: '#FDFDFD',
+  white: '#FFFFFF',
   cream: '#FFF7EF',
   blue: {
     text: '#5B9BD5', // Adjusted to match example
@@ -264,8 +264,8 @@ export const IngredientPDFTemplate: React.FC<PDFTemplateProps> = ({
           />
         </View>
 
-  {/* Legend */ }
-  <View style={styles.legendSection}>
+        {/* Legend */}
+        <View style={styles.legendSection}>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: '#81D4FA' }]} />
             <Text style={styles.legendText}>Therapeutic; offers specific nutrients or compounds that benefit your body's unique needs</Text>
@@ -280,46 +280,46 @@ export const IngredientPDFTemplate: React.FC<PDFTemplateProps> = ({
           </View>
         </View>
 
-  {/* Category Grid */ }
-  < View style = { styles.categoryGrid } >
-  {
-    organizedCategories.map((category) => (
-      <View key={category.categoryId} style={[styles.categoryColumn, { width: columnWidth }]}>
-        <Text style={styles.categoryHeader}>{category.displayName}</Text>
+        {/* Category Grid */}
+        < View style={styles.categoryGrid} >
+          {
+            organizedCategories.map((category) => (
+              <View key={category.categoryId} style={[styles.categoryColumn, { width: columnWidth }]}>
+                <Text style={styles.categoryHeader}>{category.displayName}</Text>
 
-        {category.ingredients.map(({ ingredient, food }, idx) => {
-          const colorCode = ingredient.colorCode || 'blue';
-          let dotColor = BRAND_COLORS.blue.dot;
-          if (colorCode === 'yellow') dotColor = BRAND_COLORS.yellow.dot;
-          if (colorCode === 'red') dotColor = BRAND_COLORS.red.dot;
+                {category.ingredients.map(({ ingredient, food }, idx) => {
+                  const colorCode = ingredient.colorCode || 'blue';
+                  let dotColor = BRAND_COLORS.blue.dot;
+                  if (colorCode === 'yellow') dotColor = BRAND_COLORS.yellow.dot;
+                  if (colorCode === 'red') dotColor = BRAND_COLORS.red.dot;
 
-          // Map to the example colors
-          if (colorCode === 'blue') dotColor = '#81D4FA';
-          if (colorCode === 'yellow') dotColor = '#FFC000';
-          if (colorCode === 'red') dotColor = '#FF5252';
+                  // Map to the example colors
+                  if (colorCode === 'blue') dotColor = '#81D4FA';
+                  if (colorCode === 'yellow') dotColor = '#FFC000';
+                  if (colorCode === 'red') dotColor = '#FF5252';
 
-          return (
-            <View key={`${ingredient.foodId}-${idx}`} style={styles.foodItem}>
-              <View style={[styles.dot, { backgroundColor: dotColor }]} />
-              <Text style={styles.foodName}>{food.name.toUpperCase()}</Text>
-              <View style={styles.checkbox} />
-            </View>
-          );
-        })}
-      </View>
-    ))
-  }
+                  return (
+                    <View key={`${ingredient.foodId}-${idx}`} style={styles.foodItem}>
+                      <View style={[styles.dot, { backgroundColor: dotColor }]} />
+                      <Text style={styles.foodName}>{food.name.toUpperCase()}</Text>
+                      <View style={styles.checkbox} />
+                    </View>
+                  );
+                })}
+              </View>
+            ))
+          }
         </View >
 
-  {/* Footer */ }
-  < View style = { styles.footer } >
-    {(coachName || coachContact) && (
-      <Text style={styles.coachInfo}>
-        {coachName && `Your Coach: ${coachName}`}
-        {coachName && coachContact && ' | '}
-        {coachContact && coachContact}
-      </Text>
-    )}
+        {/* Footer */}
+        < View style={styles.footer} >
+          {(coachName || coachContact) && (
+            <Text style={styles.coachInfo}>
+              {coachName && `Your Coach: ${coachName}`}
+              {coachName && coachContact && ' | '}
+              {coachContact && coachContact}
+            </Text>
+          )}
         </View >
       </Page >
     </Document >

@@ -26,7 +26,7 @@ export function AddClientForm({ onSubmit, onCancel, isLoading = false }: AddClie
       ...prev,
       [name]: value
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -76,7 +76,7 @@ export function AddClientForm({ onSubmit, onCancel, isLoading = false }: AddClie
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -89,161 +89,158 @@ export function AddClientForm({ onSubmit, onCancel, isLoading = false }: AddClie
   };
 
   return (
-    <div className="bg-brand-white rounded-xl p-6 shadow-sm border border-brand-gold/20">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Client Name */}
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-brand-dark mb-2 font-prompt">
-            Client Name *
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleInputChange}
-            className={`w-full px-3 py-3 border rounded-lg focus:ring-2 focus:ring-brand-focus focus:border-transparent font-prompt ${
-              errors.name ? 'border-red-300' : 'border-gray-300'
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Client Name */}
+      <div>
+        <label htmlFor="name" className="block text-sm font-medium text-brand-dark mb-2 font-prompt">
+          Client Name *
+        </label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          value={formData.name}
+          onChange={handleInputChange}
+          className={`w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-brand-gold/20 focus:bg-white transition-all outline-none font-prompt ${errors.name ? 'ring-2 ring-red-100 bg-red-50' : ''
             }`}
-            placeholder="Enter client's full name"
-          />
-          {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-        </div>
+          placeholder="Enter client's full name"
+        />
+        {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+      </div>
 
-        {/* Email (Optional) */}
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-brand-dark mb-2 font-prompt">
-            Email Address (Optional)
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleInputChange}
-            className={`w-full px-3 py-3 border rounded-lg focus:ring-2 focus:ring-brand-focus focus:border-transparent font-prompt ${
-              errors.email ? 'border-red-300' : 'border-gray-300'
+      {/* Email (Optional) */}
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-brand-dark mb-2 font-prompt">
+          Email Address (Optional)
+        </label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          value={formData.email}
+          onChange={handleInputChange}
+          className={`w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-brand-gold/20 focus:bg-white transition-all outline-none font-prompt ${errors.email ? 'ring-2 ring-red-100 bg-red-50' : ''
             }`}
-            placeholder="client@example.com"
-          />
-          {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-        </div>
+          placeholder="client@example.com"
+        />
+        {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+      </div>
 
-        {/* Session Notes */}
-        <div>
-          <label htmlFor="sessionNotes" className="block text-sm font-medium text-brand-dark mb-2 font-prompt">
-            Session Notes
-          </label>
-          <textarea
-            id="sessionNotes"
-            name="sessionNotes"
-            value={formData.sessionNotes}
-            onChange={handleInputChange}
-            rows={3}
-            className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-focus focus:border-transparent font-prompt resize-none"
-            placeholder="Initial session notes, health concerns, background info..."
-          />
-        </div>
+      {/* Session Notes */}
+      <div>
+        <label htmlFor="sessionNotes" className="block text-sm font-medium text-brand-dark mb-2 font-prompt">
+          Session Notes
+        </label>
+        <textarea
+          id="sessionNotes"
+          name="sessionNotes"
+          value={formData.sessionNotes}
+          onChange={handleInputChange}
+          rows={3}
+          className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-brand-gold/20 focus:bg-white transition-all outline-none font-prompt resize-none"
+          placeholder="Initial session notes, health concerns, background info..."
+        />
+      </div>
 
-        {/* Goals */}
-        <div>
-          <label className="block text-sm font-medium text-brand-dark mb-2 font-prompt">
-            Health & Nutrition Goals *
-          </label>
-          {formData.goals.map((goal, index) => (
-            <div key={index} className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={goal}
-                onChange={(e) => handleArrayChange('goals', index, e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-focus focus:border-transparent font-prompt"
-                placeholder={`Goal ${index + 1} (e.g., "Lose 15 pounds", "Increase energy")`}
-              />
-              {formData.goals.length > 1 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => removeArrayItem('goals', index)}
-                  className="px-3"
-                >
-                  Remove
-                </Button>
-              )}
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => addArrayItem('goals')}
-            className="mt-2"
-          >
-            + Add Another Goal
-          </Button>
-          {errors.goals && <p className="mt-1 text-sm text-red-600">{errors.goals}</p>}
-        </div>
+      {/* Goals */}
+      <div>
+        <label className="block text-sm font-medium text-brand-dark mb-2 font-prompt">
+          Health & Nutrition Goals *
+        </label>
+        {formData.goals.map((goal, index) => (
+          <div key={index} className="flex gap-2 mb-2">
+            <input
+              type="text"
+              value={goal}
+              onChange={(e) => handleArrayChange('goals', index, e.target.value)}
+              className="flex-1 px-4 py-2 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-brand-gold/20 focus:bg-white transition-all outline-none font-prompt"
+              placeholder={`Goal ${index + 1} (e.g., "Lose 15 pounds", "Increase energy")`}
+            />
+            {formData.goals.length > 1 && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => removeArrayItem('goals', index)}
+                className="px-3 rounded-xl border-gray-200 hover:bg-red-50 hover:text-red-500 hover:border-red-100"
+              >
+                Remove
+              </Button>
+            )}
+          </div>
+        ))}
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={() => addArrayItem('goals')}
+          className="mt-2 rounded-full border-dashed border-2 border-gray-300 text-gray-400 hover:border-brand-gold hover:text-brand-gold"
+        >
+          + Add Another Goal
+        </Button>
+        {errors.goals && <p className="mt-1 text-sm text-red-600">{errors.goals}</p>}
+      </div>
 
-        {/* Dietary Restrictions */}
-        <div>
-          <label className="block text-sm font-medium text-brand-dark mb-2 font-prompt">
-            Dietary Restrictions & Allergies
-          </label>
-          {formData.restrictions.map((restriction, index) => (
-            <div key={index} className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={restriction}
-                onChange={(e) => handleArrayChange('restrictions', index, e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-focus focus:border-transparent font-prompt"
-                placeholder={`Restriction ${index + 1} (e.g., "Gluten-free", "Nut allergy")`}
-              />
-              {formData.restrictions.length > 1 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => removeArrayItem('restrictions', index)}
-                  className="px-3"
-                >
-                  Remove
-                </Button>
-              )}
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => addArrayItem('restrictions')}
-            className="mt-2"
-          >
-            + Add Another Restriction
-          </Button>
-        </div>
+      {/* Dietary Restrictions */}
+      <div>
+        <label className="block text-sm font-medium text-brand-dark mb-2 font-prompt">
+          Dietary Restrictions & Allergies
+        </label>
+        {formData.restrictions.map((restriction, index) => (
+          <div key={index} className="flex gap-2 mb-2">
+            <input
+              type="text"
+              value={restriction}
+              onChange={(e) => handleArrayChange('restrictions', index, e.target.value)}
+              className="flex-1 px-4 py-2 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-brand-gold/20 focus:bg-white transition-all outline-none font-prompt"
+              placeholder={`Restriction ${index + 1} (e.g., "Gluten-free", "Nut allergy")`}
+            />
+            {formData.restrictions.length > 1 && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => removeArrayItem('restrictions', index)}
+                className="px-3 rounded-xl border-gray-200 hover:bg-red-50 hover:text-red-500 hover:border-red-100"
+              >
+                Remove
+              </Button>
+            )}
+          </div>
+        ))}
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={() => addArrayItem('restrictions')}
+          className="mt-2 rounded-full border-dashed border-2 border-gray-300 text-gray-400 hover:border-brand-gold hover:text-brand-gold"
+        >
+          + Add Another Restriction
+        </Button>
+      </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-3 pt-4">
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            isLoading={isLoading}
-            className="flex-1"
-          >
-            {isLoading ? 'Creating Client...' : 'Create Client'}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            onClick={onCancel}
-            disabled={isLoading}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </div>
+      {/* Action Buttons */}
+      <div className="flex gap-3 pt-4">
+        <Button
+          type="submit"
+          variant="primary"
+          size="lg"
+          isLoading={isLoading}
+          className="flex-1 rounded-full text-white"
+        >
+          {isLoading ? 'Creating Client...' : 'Create Client'}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="lg"
+          onClick={onCancel}
+          disabled={isLoading}
+          className="rounded-full"
+        >
+          Cancel
+        </Button>
+      </div>
+    </form>
   );
 }

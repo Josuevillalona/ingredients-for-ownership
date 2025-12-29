@@ -14,7 +14,7 @@ module.exports = {
         brand: {
           dark: '#191B24',      // Primary navigation, headers
           gold: '#BD9A60',      // CTAs, accent, success
-          white: '#FDFDFD',     // Backgrounds, cards
+          white: '#FFFFFF',     // Backgrounds, cards
           cream: '#FFF7EF',     // Page backgrounds
           black: '#000000',     // High contrast text
           hover: '#A68755',     // Darker gold for hover
@@ -70,6 +70,9 @@ module.exports = {
       boxShadow: {
         'soft': '0 2px 8px rgba(25, 27, 36, 0.04), 0 1px 2px rgba(25, 27, 36, 0.06)',
         'soft-lg': '0 4px 16px rgba(25, 27, 36, 0.08), 0 2px 4px rgba(25, 27, 36, 0.06)',
+        'card': '0 2px 12px rgba(0, 0, 0, 0.04)',
+        'card-hover': '0 4px 20px rgba(0, 0, 0, 0.08)',
+        'float': '0 8px 30px rgba(0, 0, 0, 0.12)',
         'glow': '0 0 0 3px rgba(189, 154, 96, 0.1)',
       },
     },

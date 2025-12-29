@@ -38,7 +38,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       }
 
       return (
-        <div className="min-h-screen bg-brand-cream flex items-center justify-center px-4">
+        <div className="min-h-screen flex items-center justify-center px-4">
           <div className="bg-brand-white rounded-xl p-8 shadow-sm border border-brand-gold/20 text-center max-w-md">
             <div className="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
               <span className="text-red-600 text-2xl">⚠️</span>

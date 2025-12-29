@@ -15,7 +15,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <div className="min-h-screen">
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center">
@@ -46,7 +46,7 @@ export default function HomePage() {
             </Button>
             <Button
               size="lg"
-              variant="outline"
+              variant="secondary"
               onClick={() => router.push('/signup')}
               className="w-full sm:w-auto"
             >
