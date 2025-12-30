@@ -140,7 +140,6 @@ export default function NewFoodPage() {
                         <div className="p-6 border-b border-gray-100 flex justify-between items-start">
                             <div>
                                 <h3 className="text-xl font-bold text-brand-dark pr-4">{previewFood.name}</h3>
-                                {previewFood.brandOwner && <p className="text-sm text-gray-500 mt-1">{previewFood.brandOwner}</p>}
                             </div>
                             <button onClick={() => setPreviewFood(null)} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600">
                                 <X className="w-5 h-5" />
