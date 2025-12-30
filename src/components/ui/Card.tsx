@@ -33,7 +33,7 @@ export function Card({
                 'rounded-[32px]',
 
                 // Variant styles
-                variant === 'default' && 'bg-brand-white shadow-card border border-white',
+                variant === 'default' && 'bg-brand-white shadow-card border border-gray-200',
                 variant === 'dashed' && 'border-2 border-dashed border-[var(--border-default)] bg-transparent',
                 // Legacy support (mapped to modern)
                 variant === 'elevated' && 'bg-brand-white shadow-card-hover border border-[var(--border-subtle)]',

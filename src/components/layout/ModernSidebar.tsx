@@ -32,7 +32,7 @@ export function ModernSidebar() {
     ];
 
     return (
-        <div className="w-20 bg-brand-white rounded-[40px] shadow-card flex flex-col items-center py-8 gap-8 h-[calc(100vh-2rem)] sticky top-4 mb-4 ml-4">
+        <div className="w-20 bg-brand-white rounded-[40px] shadow-card border border-gray-200 flex flex-col items-center py-8 gap-8 h-[calc(100vh-2rem)] sticky top-4 mb-4 ml-4">
             {/* Logo */}
             <img
                 src="/icons/icon-192x192.svg"

@@ -87,7 +87,7 @@ function DashboardContent() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search clients..."
-              className="bg-gray-50 rounded-full pl-10 pr-4 py-3 text-sm w-64 border-none focus:ring-2 focus:ring-brand-gold/20 outline-none transition-all placeholder:font-light"
+              className="bg-gray-50 rounded-full pl-10 pr-4 py-3 text-sm w-64 border border-gray-200 focus:ring-2 focus:ring-brand-gold/20 outline-none transition-all placeholder:font-light"
             />
           </div>
 
@@ -101,7 +101,7 @@ function DashboardContent() {
 
           {/* Avatar */}
           <Link href="/dashboard/profile">
-            <div className="w-12 h-12 bg-gray-100 rounded-full border-2 border-white shadow-sm overflow-hidden hover:border-brand-gold/20 transition-colors cursor-pointer flex items-center justify-center">
+            <div className="w-12 h-12 bg-gray-100 rounded-full border border-gray-200 shadow-sm overflow-hidden hover:border-brand-gold/20 transition-colors cursor-pointer flex items-center justify-center">
               <User className="w-5 h-5 text-gray-400" />
             </div>
           </Link>
@@ -123,7 +123,7 @@ function DashboardContent() {
         </div>
 
         {/* Published */}
-        <div className="bg-white border border-gray-100 rounded-[32px] p-6 shadow-card hover:shadow-card-hover transition-all duration-300">
+        <div className="bg-white border border-gray-200 rounded-[32px] p-6 shadow-card hover:shadow-card-hover transition-all duration-300">
           <div className="flex justify-between items-start mb-4">
             <div className="w-10 h-10 bg-green-50 rounded-2xl flex items-center justify-center text-green-600">
               <CheckCircle className="w-5 h-5" />
@@ -137,7 +137,7 @@ function DashboardContent() {
         </div>
 
         {/* Drafts */}
-        <div className="bg-white border border-gray-100 rounded-[32px] p-6 shadow-card hover:shadow-card-hover transition-all duration-300">
+        <div className="bg-white border border-gray-200 rounded-[32px] p-6 shadow-card hover:shadow-card-hover transition-all duration-300">
           <div className="flex justify-between items-start mb-4">
             <div className="w-10 h-10 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-600">
               <Clock className="w-5 h-5" />
@@ -160,7 +160,7 @@ function DashboardContent() {
           </Link>
         </div>
 
-        <Card padding="none" className="overflow-hidden border border-gray-100">
+        <Card padding="none" className="overflow-hidden border border-gray-200">
           {isLoading ? (
             <div className="p-12 text-center text-brand-dark/40 font-light">Loading plans...</div>
           ) : filteredPlans.length === 0 ? (
@@ -171,7 +171,7 @@ function DashboardContent() {
               </Link>
             </div>
           ) : (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-gray-100">
               {filteredPlans.map((plan) => (
                 <div key={plan.id} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between group cursor-pointer">
                   <div className="flex items-center gap-4">
