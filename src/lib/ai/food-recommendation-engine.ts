@@ -12,6 +12,7 @@ export interface FoodRecommendation {
   category: 'blue' | 'yellow' | 'red';
   reasoning: string;
   confidence: number;
+  method: 'hard-rule' | 'ai' | 'fallback';
 }
 
 export interface RecommendationOptions {
@@ -161,7 +162,8 @@ export class FoodRecommendationEngine {
               foodName: food.name,
               category: 'red',
               reasoning: 'Dairy intolerance/restriction noted - avoid to prevent digestive issues',
-              confidence: 0.99
+              confidence: 0.99,
+              method: 'hard-rule'
             });
           }
         }
@@ -187,7 +189,8 @@ export class FoodRecommendationEngine {
             foodName: food.name,
             category: 'red',
             reasoning: 'Gluten intolerance/celiac noted - strict avoidance required',
-            confidence: 0.99
+            confidence: 0.99,
+            method: 'hard-rule'
           });
         }
       });
@@ -227,7 +230,8 @@ export class FoodRecommendationEngine {
               foodName: food.name,
               category: 'red',
               reasoning: reason,
-              confidence: 0.99
+              confidence: 0.99,
+              method: 'hard-rule'
             });
           }
         });
@@ -399,7 +403,8 @@ Return ONLY valid JSON in this exact format (no additional text):
             foodName: food?.name || rec.foodId,
             category: rec.category,
             reasoning: rec.reasoning,
-            confidence: rec.confidence
+            confidence: rec.confidence,
+            method: 'ai' as const
           };
         });
 
