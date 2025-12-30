@@ -3,14 +3,14 @@
  * Handles integration with USDA FDC API for food data
  */
 
-import { 
-  FDCSearchCriteriaInput, 
-  FDCSearchResult, 
+import {
+  FDCSearchCriteriaInput,
+  FDCSearchResult,
   FDCSearchResultFood,
   FDCEnhancedFoodItem,
   FDCFoodsRequest
 } from '@/lib/validations/fdc';
-import { 
+import {
   FDCAbridgedFoodItem,
   FDCBrandedFoodItem,
   FDCFoundationFoodItem
@@ -170,7 +170,7 @@ export class FDCService {
     includeColorAssignment = true
   ): Promise<FDCEnhancedFoodItem[]> {
     const searchResult = await this.searchFoods(criteria);
-    
+
     if (!includeColorAssignment) {
       return searchResult.foods.map(food => ({ ...food }));
     }
@@ -370,10 +370,20 @@ export class FDCService {
    * Clean food name for our system
    */
   private cleanFoodName(description: string): string {
-    return description
+    const cleaned = description
       .replace(/\b(raw|fresh|frozen|canned|dried)\b/gi, '') // Remove preparation terms
       .replace(/\s+/g, ' ') // Normalize whitespace
       .trim();
+
+    // Convert to Title Case
+    return cleaned.toLowerCase().split(' ').map(word => {
+      // Don't capitalize small words unless it's the first word
+      const smallWords = ['and', 'or', 'of', 'in', 'a', 'an', 'the', 'with'];
+      if (smallWords.includes(word) && word !== cleaned.split(' ')[0]) {
+        return word;
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    }).join(' ');
   }
 
   /**
@@ -381,7 +391,7 @@ export class FDCService {
    */
   private generateDescription(food: any): string {
     let description = food.description;
-    
+
     if (food.brandOwner) {
       description += ` (${food.brandOwner})`;
     }
@@ -392,34 +402,45 @@ export class FDCService {
 
     return description;
   }
-
   /**
    * Generate serving size information
    */
   private generateServingSize(food: any): string {
+    // 1. Try explicit household serving text (often best for display)
+    if (food.householdServingFullText) {
+      return food.householdServingFullText;
+    }
+
+    // 2. Try numeric serving size + unit
     if (food.servingSize && food.servingSizeUnit) {
       return `${food.servingSize} ${food.servingSizeUnit}`;
     }
 
-    // Default serving sizes based on food type
+    // 3. For Foundation and SR Legacy foods, the data is standardly per 100g
+    // If no specific household measure is provided, '100g' is the most accurate technical truth
+    if (food.dataType === 'Foundation' || food.dataType === 'SR Legacy') {
+      return '100g';
+    }
+
+    // 4. Heuristics for common food types (fallback)
     const description = food.description?.toLowerCase() || '';
-    
+
     if (description.includes('vegetable') || description.includes('fruit')) {
       return '1 cup';
     }
-    if (description.includes('meat') || description.includes('fish') || description.includes('poultry')) {
-      return '4 oz (palm-sized portion)';
+    if (description.includes('meat') || description.includes('fish') || description.includes('poultry') || description.includes('beef') || description.includes('chicken') || description.includes('pork')) {
+      return '4 oz'; // Standard coaching portion
     }
     if (description.includes('nuts') || description.includes('seeds')) {
-      return '1 oz (small handful)';
+      return '1 oz';
     }
-    if (description.includes('oil')) {
-      return '1 tablespoon';
+    if (description.includes('oil') || description.includes('butter')) {
+      return '1 tbsp';
     }
 
-    return '1 serving';
+    // 5. Last resort fallback
+    return '1 serving (100g)';
   }
-
   /**
    * Extract nutritional information from FDC food item
    */
@@ -447,7 +468,7 @@ export class FDCService {
       for (const nutrient of food.foodNutrients) {
         const name = nutrient.name?.toLowerCase() || '';
         const number = nutrient.number;
-        
+
         // Map common nutrients by number or name
         if (number === 208 || name.includes('energy') || name.includes('calories')) {
           nutrients.calories = nutrient.amount || 0;

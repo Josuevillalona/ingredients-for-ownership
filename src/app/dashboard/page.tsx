@@ -92,7 +92,7 @@ function DashboardContent() {
           </div>
 
           {/* Create Button Pill */}
-          <Link href="/dashboard/plans/create">
+          <Link href="/dashboard/plans/new">
             <button className="bg-brand-dark text-white px-6 py-3 rounded-full text-sm font-medium hover:scale-105 transition-transform shadow-lg shadow-brand-dark/20 flex items-center gap-2">
               <Plus className="w-4 h-4" />
               <span>New Plan</span>
@@ -166,7 +166,7 @@ function DashboardContent() {
           ) : filteredPlans.length === 0 ? (
             <div className="p-12 text-center">
               <p className="text-brand-dark/40 font-light mb-4">No plans found.</p>
-              <Link href="/dashboard/plans/create">
+              <Link href="/dashboard/plans/new">
                 <Button variant="primary" size="sm" className="rounded-full">Create New Plan</Button>
               </Link>
             </div>

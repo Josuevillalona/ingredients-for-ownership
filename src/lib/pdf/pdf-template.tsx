@@ -72,8 +72,8 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
     marginBottom: 12,
     marginTop: 5
   },
@@ -110,7 +110,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5
   },
   logo: {
-    width: 80,
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 120,
     height: 'auto'
   },
   legendSection: {
@@ -229,7 +232,7 @@ export const IngredientPDFTemplate: React.FC<PDFTemplateProps> = ({
   const backgroundBase64 = `data:image/png;base64,${backgroundBuffer.toString('base64')}`;
 
   // Read and encode logo
-  const logoPath = path.join(publicDir, 'OI logos', 'Normal Light (1).png');
+  const logoPath = path.join(publicDir, 'OI logos', 'Normal Dark (1).png');
   const logoBuffer = fs.readFileSync(logoPath);
   const logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`;
 

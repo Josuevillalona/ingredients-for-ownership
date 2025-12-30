@@ -6,6 +6,14 @@ export interface FoodItemData {
   status: FoodStatus;
   categoryId: string;
   nutritionalHighlights?: string[];
+  nutritionalInfo?: {
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+    fiber?: number;
+  };
+  servingSize?: string;
   fdcId?: number;
 }
 

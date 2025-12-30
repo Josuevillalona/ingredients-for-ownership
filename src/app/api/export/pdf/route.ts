@@ -6,19 +6,24 @@ import { authService } from '@/lib/firebase/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const { documentId, coachId } = await request.json();
+    const { documentId, coachId, shareToken } = await request.json();
 
-    // Validate required fields
-    if (!documentId || !coachId) {
+    let document;
+
+    // 1. Try to resolve by Share Token (Public Access)
+    if (shareToken) {
+      document = await ingredientDocumentService.getDocumentByShareToken(shareToken);
+    }
+    // 2. Try to resolve by Coach ID + Document ID (Internal Access)
+    else if (documentId && coachId) {
+      document = await ingredientDocumentService.getDocument(documentId, coachId);
+    } else {
       return NextResponse.json(
-        { error: 'Missing required fields: documentId and coachId' },
+        { error: 'Missing required fields: shareToken OR (documentId and coachId)' },
         { status: 400 }
       );
     }
 
-    // Fetch document and validate ownership
-    const document = await ingredientDocumentService.getDocument(documentId, coachId);
-    
     if (!document) {
       return NextResponse.json(
         { error: 'Document not found or access denied' },
@@ -37,8 +42,8 @@ export async function POST(request: NextRequest) {
     // Fetch all foods for ingredient lookup
     const foods = await foodService.getGlobalFoods();
 
-    // Fetch coach profile for branding
-    const coach = await authService.getCoachProfile(coachId);
+    // Fetch coach profile for branding (use the ID directly from the document)
+    const coach = await authService.getCoachProfile(document.coachId);
 
     // Generate PDF
     const pdfBuffer = await pdfGenerator.generatePDF({
@@ -63,7 +68,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('PDF generation error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to generate PDF',
         details: error instanceof Error ? error.message : 'Unknown error'
       },

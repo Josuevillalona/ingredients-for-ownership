@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   title: 'Ingredients for Ownership - Health Coaching Platform',
   description: 'AI-assisted nutritional plan creation for health coaches',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/icons/icon-192x192.svg',
+    apple: '/icons/icon-192x192.svg',
+  },
 };
 
 export const viewport: Viewport = {
@@ -28,7 +32,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body 
+      <body
         className="font-prompt antialiased"
         suppressHydrationWarning={true}
       >

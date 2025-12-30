@@ -17,10 +17,10 @@ export function CategoryNavigation({ categories, selectedCategory, onCategorySel
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => onCategorySelect(undefined)}
-          className={`px-4 py-2 rounded-lg font-prompt font-medium transition-all duration-200 text-sm
-            ${!selectedCategory 
-              ? 'bg-brand-gold text-brand-white shadow-md' 
-              : 'bg-brand-white/70 text-brand-dark hover:bg-brand-white border border-brand-gold/20'
+          className={`px-4 py-2 rounded-full font-prompt font-medium transition-all duration-200 text-sm border
+            ${!selectedCategory
+              ? 'bg-brand-gold text-white border-brand-gold shadow-md'
+              : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200 hover:border-gray-300'
             }`}
         >
           All Categories
@@ -29,10 +29,10 @@ export function CategoryNavigation({ categories, selectedCategory, onCategorySel
           <button
             key={category.id}
             onClick={() => onCategorySelect(category.id)}
-            className={`px-4 py-2 rounded-lg font-prompt font-medium transition-all duration-200 text-sm
+            className={`px-4 py-2 rounded-full font-prompt font-medium transition-all duration-200 text-sm border
               ${selectedCategory === category.id
-                ? 'bg-brand-gold text-brand-white shadow-md' 
-                : 'bg-brand-white/70 text-brand-dark hover:bg-brand-white border border-brand-gold/20'
+                ? 'bg-brand-gold text-white border-brand-gold shadow-md'
+                : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200 hover:border-gray-300'
               }`}
           >
             {category.title}

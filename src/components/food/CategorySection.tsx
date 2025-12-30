@@ -8,9 +8,10 @@ interface CategorySectionProps {
   category: CategoryData;
   foods: FoodItemData[];
   onStatusChange: (foodId: string, status: FoodStatus) => void;
+  showActionIcon?: boolean;
 }
 
-export function CategorySection({ category, foods, onStatusChange }: CategorySectionProps) {
+export function CategorySection({ category, foods, onStatusChange, showActionIcon = true }: CategorySectionProps) {
   if (foods.length === 0) {
     return null;
   }
@@ -18,12 +19,11 @@ export function CategorySection({ category, foods, onStatusChange }: CategorySec
   return (
     <div className="mb-8">
       {/* Category Header */}
-      <div className="flex items-center space-x-3 mb-4">
-        <div className="w-2 h-8 bg-brand-gold rounded-full" />
-        <h2 className="font-prompt font-bold text-2xl text-brand-dark">
+      <div className="flex items-center justify-between mb-4 px-1">
+        <h2 className="font-prompt font-bold text-xl text-brand-dark">
           {category.title}
         </h2>
-        <span className="bg-brand-gold/20 text-brand-dark font-prompt font-medium text-sm px-3 py-1 rounded-full">
+        <span className="bg-gray-100 text-gray-500 font-medium text-xs px-3 py-1 rounded-full">
           {foods.length} items
         </span>
       </div>
@@ -35,6 +35,7 @@ export function CategorySection({ category, foods, onStatusChange }: CategorySec
             key={food.id}
             food={food}
             onStatusChange={onStatusChange}
+            showActionIcon={showActionIcon}
           />
         ))}
       </div>

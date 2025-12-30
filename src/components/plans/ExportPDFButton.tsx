@@ -8,9 +8,10 @@ interface ExportPDFButtonProps {
   documentId: string;
   clientName: string;
   className?: string;
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
 }
 
-export function ExportPDFButton({ documentId, clientName, className }: ExportPDFButtonProps) {
+export function ExportPDFButton({ documentId, clientName, className, variant = 'secondary' }: ExportPDFButtonProps) {
   const { user } = useAuth();
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +64,7 @@ export function ExportPDFButton({ documentId, clientName, className }: ExportPDF
   return (
     <div className={className}>
       <Button
-        variant="outline"
+        variant={variant}
         onClick={handleExport}
         disabled={isExporting}
         className="w-full sm:w-auto"
@@ -75,11 +76,11 @@ export function ExportPDFButton({ documentId, clientName, className }: ExportPDF
           </>
         ) : (
           <>
-             Export PDF
+            Export PDF
           </>
         )}
       </Button>
-      
+
       {error && (
         <p className="text-sm text-red-600 mt-2">{error}</p>
       )}

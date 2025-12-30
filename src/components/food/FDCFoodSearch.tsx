@@ -254,11 +254,10 @@ interface FDCFoodCardProps {
 function FDCFoodCard({ food, isSelected, onSelect, onQuickSave, onViewDetail, isQuickSaving }: FDCFoodCardProps) {
   return (
     <div
-      className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-        isSelected 
-          ? 'border-blue-500 bg-blue-50' 
+      className={`border rounded-lg p-3 cursor-pointer transition-colors ${isSelected
+          ? 'border-blue-500 bg-blue-50'
           : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-      }`}
+        }`}
       onClick={onSelect}
     >
       <div className="flex items-start justify-between">
@@ -268,7 +267,7 @@ function FDCFoodCard({ food, isSelected, onSelect, onQuickSave, onViewDetail, is
               {food.description}
             </h5>
           </div>
-          
+
           <div className="flex flex-wrap gap-2 text-xs text-gray-500">
             <span className="bg-gray-100 px-2 py-1 rounded">
               {food.dataType}
@@ -296,7 +295,8 @@ function FDCFoodCard({ food, isSelected, onSelect, onQuickSave, onViewDetail, is
                   e.stopPropagation();
                   onSelect(); // Preview the food
                 }}
-                className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                className="rounded-full"
+                variant="ghost"
               >
                 Preview
               </Button>
@@ -306,11 +306,8 @@ function FDCFoodCard({ food, isSelected, onSelect, onQuickSave, onViewDetail, is
                   onQuickSave();
                 }}
                 disabled={isQuickSaving}
-                className={`px-2 py-1 text-xs rounded ${
-                  isQuickSaving 
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-green-100 hover:bg-green-200 text-green-700'
-                }`}
+                variant="primary"
+                className="rounded-full ml-2"
               >
                 {isQuickSaving ? 'Saving...' : 'Quick Save'}
               </Button>

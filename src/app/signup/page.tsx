@@ -72,7 +72,7 @@ export default function SignupPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-brand-gold rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
-            <span className="text-brand-white font-prompt font-bold text-2xl">I</span>
+            <img src="/icons/icon-192x192.svg" alt="Loading" className="w-10 h-10" />
           </div>
           <p className="text-brand-dark/60 font-prompt">Loading...</p>
         </div>

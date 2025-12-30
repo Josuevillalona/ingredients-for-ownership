@@ -10,9 +10,10 @@ interface FoodSelectionGuideProps {
   foods: FoodItemData[];
   categories: CategoryData[];
   onStatusChange: (foodId: string, status: FoodStatus) => void;
+  showActionIcon?: boolean;
 }
 
-export function FoodSelectionGuide({ foods, categories, onStatusChange }: FoodSelectionGuideProps) {
+export function FoodSelectionGuide({ foods, categories, onStatusChange, showActionIcon = true }: FoodSelectionGuideProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
 
@@ -23,12 +24,12 @@ export function FoodSelectionGuide({ foods, categories, onStatusChange }: FoodSe
     // Filter by search term
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(food => 
+      filtered = filtered.filter(food =>
         food.name.toLowerCase().includes(searchLower) ||
-        (food.nutritionalHighlights && 
-         food.nutritionalHighlights.some(highlight => 
-           highlight.toLowerCase().includes(searchLower)
-         ))
+        (food.nutritionalHighlights &&
+          food.nutritionalHighlights.some(highlight =>
+            highlight.toLowerCase().includes(searchLower)
+          ))
       );
     }
 
@@ -43,7 +44,7 @@ export function FoodSelectionGuide({ foods, categories, onStatusChange }: FoodSe
   // Group foods by category for display
   const foodsByCategory = useMemo(() => {
     const grouped = new Map<string, FoodItemData[]>();
-    
+
     // Initialize all categories
     categories.forEach(category => {
       grouped.set(category.id, []);
@@ -65,17 +66,7 @@ export function FoodSelectionGuide({ foods, categories, onStatusChange }: FoodSe
   }, [categories]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="font-prompt font-bold text-3xl text-brand-dark mb-2">
-          Food Selection Guide
-        </h1>
-        <p className="text-brand-dark/60 font-prompt">
-          Choose foods and set their status for your client's nutrition plan
-        </p>
-      </div>
-
+    <div className="space-y-6">
       {/* Search */}
       <SearchBar
         searchTerm={searchTerm}
@@ -107,13 +98,14 @@ export function FoodSelectionGuide({ foods, categories, onStatusChange }: FoodSe
       <div className="space-y-8">
         {sortedCategories.map((category) => {
           const categoryFoods = foodsByCategory.get(category.id) || [];
-          
+
           return (
             <CategorySection
               key={category.id}
               category={category}
               foods={categoryFoods}
               onStatusChange={onStatusChange}
+              showActionIcon={showActionIcon}
             />
           );
         })}

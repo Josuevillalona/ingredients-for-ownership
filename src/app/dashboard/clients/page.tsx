@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Search, Plus, Users, User, Trash2 } from 'lucide-react';
+import { Search, Plus, Users, User, Trash2, FileText } from 'lucide-react';
 import { useClients } from '@/lib/hooks/useClients';
 import Link from 'next/link';
 
@@ -116,6 +116,11 @@ export default function ClientsPage() {
                 <Link href={`/dashboard/clients/${client.id}`}>
                   <Button variant="ghost" size="sm" className="rounded-full hover:bg-brand-gold/10 hover:text-brand-gold">
                     View Profile
+                  </Button>
+                </Link>
+                <Link href={`/dashboard/plans/new?clientId=${client.id}`}>
+                  <Button variant="ghost" size="sm" className="rounded-full hover:bg-brand-gold/10 hover:text-brand-gold" title="Create Plan">
+                    <FileText className="w-4 h-4" />
                   </Button>
                 </Link>
                 <button

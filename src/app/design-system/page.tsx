@@ -196,6 +196,91 @@ export default function DesignSystemPage() {
 
                 </div>
             </section>
+            <section className="mb-16">
+                <h2 className="text-2xl font-semibold mb-6 pb-2 border-b border-border-subtle">5. High-Contrast Dark Context (New)</h2>
+                <p className="text-brand-dark/60 mb-6 font-light">
+                    Use <span className="font-mono text-brand-dark font-medium">bg-brand-dark</span> for Headers and Hero sections to create dramatic contrast.
+                    Overlap white content cards to create depth.
+                </p>
+
+                {/* Container simulating a page */}
+                <div className="rounded-[40px] overflow-hidden border border-gray-200 shadow-2xl">
+
+                    {/* 1. Dark Hero Header */}
+                    <div className="bg-brand-dark pt-20 pb-32 relative overflow-hidden text-center">
+                        {/* Gold Glow Effects */}
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-gold/5 rounded-full -ml-10 -mb-10 blur-2xl"></div>
+
+                        {/* Content */}
+                        <div className="relative z-10 px-6">
+                            <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-8">
+                                <span className="text-brand-gold text-xs font-bold tracking-widest uppercase">Ingredients for Ownership</span>
+                            </div>
+
+                            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 font-prompt">
+                                Nutrition Plan for <span className="text-brand-gold">Lisa M.</span>
+                            </h1>
+                            <p className="text-white/60 text-lg font-light max-w-xl mx-auto mb-8">
+                                Your personalized guide to therapeutic food & beverage choices.
+                            </p>
+
+                            <button className="bg-brand-gold text-white px-8 py-3 rounded-full font-medium shadow-lg hover:bg-[#A3824A] transition-colors flex items-center gap-2 mx-auto">
+                                <span>Download PDF</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* 2. Overlapping White Content Card */}
+                    <div className="relative z-20 px-4 md:px-12 -mt-16 pb-12">
+                        <div className="bg-white rounded-[32px] p-8 shadow-card border border-brand-gold/10">
+
+                            {/* Progress Section Demo */}
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-8">
+                                <div>
+                                    <h3 className="text-xl font-bold text-brand-dark mb-1">Your Progress</h3>
+                                    <p className="text-brand-dark/60 text-sm">Track your adherence to Recommended foods.</p>
+                                </div>
+                                <div className="flex-1 max-w-md w-full">
+                                    <div className="flex justify-between text-sm font-bold mb-2">
+                                        <span className="text-brand-gold">56% Complete</span>
+                                        <span className="text-gray-300">Weekly Goal</span>
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-3">
+                                        <div className="bg-brand-gold/80 h-3 rounded-full w-[56%] shadow-sm"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Divider */}
+                            <div className="h-px bg-gray-100 mb-8"></div>
+
+                            {/* Food Grid Demo */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {[1, 2, 3].map((i) => (
+                                    <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 hover:border-brand-gold/30 hover:shadow-lg transition-all group relative overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                                        <div className="pl-3">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-0.5 rounded uppercase tracking-wider">Approved</span>
+                                                <div className="w-6 h-6 rounded-full border-2 border-brand-gold bg-brand-gold flex items-center justify-center">
+                                                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <h4 className="font-bold text-brand-dark group-hover:text-brand-gold transition-colors">Wild Salmon</h4>
+                                            <p className="text-xs text-gray-400 mt-1">High Omega-3s</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </section>
         </div>
     );
 }

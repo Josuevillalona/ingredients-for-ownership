@@ -1,15 +1,15 @@
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  getDocs, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy, 
-  Timestamp 
+import {
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from './config';
 import type { Client, CreateClientData } from '@/lib/types';
@@ -74,13 +74,13 @@ export class ClientService {
   async getClient(clientId: string, coachId: string): Promise<Client | null> {
     try {
       const clientDoc = await getDoc(doc(db, this.collectionName, clientId));
-      
+
       if (!clientDoc.exists()) {
         return null;
       }
 
       const clientData = clientDoc.data() as Omit<Client, 'id'>;
-      
+
       // Verify coach ownership
       if (clientData.coachId !== coachId) {
         throw new Error('Access denied: Client belongs to different coach');
@@ -99,8 +99,8 @@ export class ClientService {
    * Update client information
    */
   async updateClient(
-    clientId: string, 
-    coachId: string, 
+    clientId: string,
+    coachId: string,
     updates: Partial<CreateClientData>
   ): Promise<void> {
     try {
@@ -119,7 +119,7 @@ export class ClientService {
       }
 
       if (updates.email !== undefined) {
-        updateData.email = updates.email?.trim() || undefined;
+        updateData.email = updates.email?.trim() || '';
       }
 
       if (updates.sessionNotes !== undefined) {
@@ -163,13 +163,13 @@ export class ClientService {
   async searchClients(coachId: string, searchTerm: string): Promise<Client[]> {
     try {
       const allClients = await this.getClientsForCoach(coachId);
-      
+
       if (!searchTerm.trim()) {
         return allClients;
       }
 
       const term = searchTerm.toLowerCase();
-      return allClients.filter(client => 
+      return allClients.filter(client =>
         client.name.toLowerCase().includes(term) ||
         client.email?.toLowerCase().includes(term) ||
         client.goals.some(goal => goal.toLowerCase().includes(term))

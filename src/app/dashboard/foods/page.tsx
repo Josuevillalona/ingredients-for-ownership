@@ -9,10 +9,14 @@ import { Card } from '@/components/ui/Card';
 import { Trash2, Edit2, Info } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
+import { NutritionModal } from '@/components/food/NutritionModal';
+import { FoodItemData } from '@/components/food/types';
+
 export default function FoodsPage() {
   const router = useRouter();
   const { foods, loading, deleteFood } = useFoods();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFood, setSelectedFood] = useState<FoodItemData | null>(null);
 
   const filteredFoods = foods.filter(food =>
     food.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -61,7 +65,25 @@ export default function FoodsPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {filteredFoods.map((food) => (
-            <Card key={food.id} className="p-4 flex flex-col md:flex-row md:items-center gap-4 hover:shadow-card-hover transition-all duration-300 group rounded-[32px] border border-transparent hover:border-gray-100">
+            <Card
+              key={food.id}
+              className="p-4 flex flex-col md:flex-row md:items-center gap-4 hover:shadow-card-hover transition-all duration-300 group rounded-[32px] border border-transparent hover:border-gray-100 cursor-pointer"
+              onClick={(e) => {
+                // Prevent opening modal if clicking actions
+                if ((e.target as HTMLElement).closest('button')) return;
+
+                // Map to FoodItemData for modal
+                setSelectedFood({
+                  id: food.id,
+                  name: food.name,
+                  status: 'none', // Default for view-only
+                  categoryId: food.category || 'other',
+                  servingSize: food.servingSize,
+                  nutritionalInfo: food.nutritionalInfo,
+                  nutritionalHighlights: [] // Add logic if needed
+                });
+              }}
+            >
               {/* Icon/Image Placeholder */}
               <div className="w-16 h-16 rounded-[24px] bg-gray-50 flex items-center justify-center shrink-0 text-2xl group-hover:bg-brand-gold/10 transition-colors">
                 {food.category === 'protein' ? '🥩' : food.category === 'carb' ? '🍚' : '🥗'}
@@ -70,7 +92,7 @@ export default function FoodsPage() {
               {/* Info */}
               <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-brand-dark truncate group-hover:text-brand-gold transition-colors">{food.name}</h3>
+                  <h3 className="font-bold text-brand-dark truncate group-hover:text-brand-gold transition-colors capitalize">{food.name.toLowerCase()}</h3>
                   {food.source === 'fdc-api' && (
                     <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full uppercase tracking-wider">USDA</span>
                   )}
@@ -104,6 +126,15 @@ export default function FoodsPage() {
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Nutrition Detail Modal */}
+      {selectedFood && (
+        <NutritionModal
+          food={selectedFood}
+          isOpen={!!selectedFood}
+          onClose={() => setSelectedFood(null)}
+        />
       )}
     </div>
   );

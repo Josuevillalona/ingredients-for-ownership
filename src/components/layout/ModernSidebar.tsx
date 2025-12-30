@@ -34,9 +34,11 @@ export function ModernSidebar() {
     return (
         <div className="w-20 bg-brand-white rounded-[40px] shadow-card flex flex-col items-center py-8 gap-8 h-[calc(100vh-2rem)] sticky top-4 mb-4 ml-4">
             {/* Logo */}
-            <div className="w-10 h-10 bg-brand-gold rounded-xl flex items-center justify-center text-brand-white font-bold text-xl shadow-glow shrink-0">
-                I
-            </div>
+            <img
+                src="/icons/icon-192x192.svg"
+                alt="IO Logo"
+                className="w-10 h-10 rounded-xl shadow-glow shrink-0"
+            />
 
             {/* Navigation Icons */}
             <div className="flex flex-col gap-6 w-full items-center flex-1 overflow-y-auto no-scrollbar py-2">

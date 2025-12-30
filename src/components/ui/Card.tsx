@@ -4,7 +4,7 @@ import React from 'react';
 interface CardProps {
     children: React.ReactNode;
     className?: string;
-    variant?: 'default' | 'dashed' | 'elevated';
+    variant?: 'default' | 'dashed' | 'elevated' | 'dark';
     hover?: boolean;
     padding?: 'none' | 'sm' | 'md' | 'lg';
 }
@@ -26,15 +26,16 @@ export function Card({
     return (
         <div
             className={clsx(
-                'bg-brand-white transition-all duration-[var(--duration-base)]',
+                'transition-all duration-[var(--duration-base)]',
                 // New default shape
                 'rounded-[32px]',
 
                 // Variant styles
-                variant === 'default' && 'shadow-card border border-white',
+                variant === 'default' && 'bg-brand-white shadow-card border border-white',
                 variant === 'dashed' && 'border-2 border-dashed border-[var(--border-default)] bg-transparent',
                 // Legacy support (mapped to modern)
-                variant === 'elevated' && 'shadow-card-hover border border-[var(--border-subtle)]',
+                variant === 'elevated' && 'bg-brand-white shadow-card-hover border border-[var(--border-subtle)]',
+                variant === 'dark' && 'bg-brand-dark text-white shadow-card border border-white/10',
 
                 // Hover effects
                 hover && 'hover:shadow-card-hover hover:-translate-y-1',

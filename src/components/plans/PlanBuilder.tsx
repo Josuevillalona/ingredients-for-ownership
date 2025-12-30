@@ -15,7 +15,7 @@ interface PlanBuilderProps {
 export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProps) {
   const { foods, loading: foodsLoading, loadFoods } = useFoods();
   const { clients, isLoading: clientsLoading } = useClients();
-  
+
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [planTitle, setPlanTitle] = useState('');
   const [selectedFoods, setSelectedFoods] = useState<Record<string, PlanFoodItem>>({});
@@ -37,7 +37,7 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
   // Filter foods based on search only
   const filteredFoods = foods.filter(food => {
     const matchesSearch = food.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         food.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+      food.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesSearch;
   });
 
@@ -46,7 +46,7 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
 
   const toggleFoodSelection = (food: FoodItem) => {
     const foodKey = food.id;
-    
+
     if (selectedFoods[foodKey]) {
       // Remove from selection
       const newSelection = { ...selectedFoods };
@@ -72,7 +72,7 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
   const handleNewFoodAdded = async (foodId: string) => {
     // Refresh foods list to get the newly added food
     await loadFoods();
-    
+
     // Find the newly added food and automatically add it to the plan
     setTimeout(() => {
       const newFood = foods.find(f => f.id === foodId);
@@ -80,7 +80,7 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
         toggleFoodSelection(newFood);
       }
     }, 100); // Small delay to ensure foods are loaded
-    
+
     // Close the add food modal
     setShowAddFood(false);
   };
@@ -135,7 +135,7 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
               Back to Plan
             </Button>
           </div>
-          
+
           <AddFDCFoodForm
             onSuccess={handleNewFoodAdded}
             onCancel={() => setShowAddFood(false)}
@@ -155,7 +155,7 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
       {/* Plan Header */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Create Nutrition Plan</h2>
-        
+
         {/* Client Selection */}
         {!selectedClientId && (
           <div className="mb-4">
@@ -217,7 +217,7 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
           <h3 className="text-lg font-medium text-gray-900">
             Select Foods for Plan
           </h3>
-          
+
           <div className="flex gap-3 items-center">
             {/* Search */}
             <div className="flex-1 max-w-md">
@@ -229,7 +229,7 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-gold focus:border-brand-gold"
               />
             </div>
-            
+
             {/* Add New Food Button */}
             <Button
               variant="outline"
@@ -248,8 +248,8 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
             <h3 className="text-sm font-medium text-yellow-800">Legacy Plan Builder</h3>
           </div>
           <p className="text-sm text-yellow-700 mt-1">
-            This component uses the legacy plan system and needs updating for the new global food database. 
-            Please use <strong>/dashboard/plans/create</strong> for the updated plan creation experience.
+            This component uses the legacy plan system and needs updating for the new global food database.
+            Please use <strong>/dashboard/plans/new</strong> for the updated plan creation experience.
           </p>
         </div>
 
@@ -263,15 +263,15 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
         {filteredFoods.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 mb-4">
-              {searchTerm 
+              {searchTerm
                 ? `No foods found matching "${searchTerm}"`
                 : 'No foods available'
               }
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               {searchTerm && (
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant="secondary"
                   onClick={() => setSearchTerm('')}
                 >
                   Clear Search
@@ -294,7 +294,7 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             Selected Foods ({selectedFoodsCount})
           </h3>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {Object.values(selectedFoods).map((planFood) => (
               <div key={planFood.foodId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">

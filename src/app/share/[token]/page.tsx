@@ -4,7 +4,11 @@ import React from 'react';
 import { useParams } from 'next/navigation';
 import type { Food } from '@/lib/types';
 import { useSharedDocument } from '@/lib/hooks/useSharedDocument';
-import { getColorMessage, getProgressSummary, isTrackableIngredient } from '@/lib/utils/progress';
+import { getProgressSummary, isTrackableIngredient } from '@/lib/utils/progress';
+import { FOOD_CATEGORIES, getSortedCategories, determineFoodCategory } from '@/lib/utils/food-categories';
+import { PublicExportPDFButton } from '@/components/plans/PublicExportPDFButton';
+import { CheckCircle, AlertCircle, MinusCircle, Info, Share2, Download } from 'lucide-react';
+import { Card } from '@/components/ui/Card';
 
 export default function SharedIngredientPage() {
   const params = useParams();
@@ -25,32 +29,6 @@ export default function SharedIngredientPage() {
     return foods.find(food => food.id === foodId) || null;
   };
 
-  const getColorBadgeClass = (colorCode: string | null) => {
-    switch (colorCode) {
-      case 'blue':
-        return 'bg-[#81D4FA]/10 text-[#5B9BD5] border-[#81D4FA]/30';
-      case 'yellow':
-        return 'bg-[#FFC000]/10 text-[#D4A000] border-[#FFC000]/30';
-      case 'red':
-        return 'bg-[#FF5252]/10 text-[#D32F2F] border-[#FF5252]/30';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getColorLabel = (colorCode: string | null) => {
-    switch (colorCode) {
-      case 'blue':
-        return 'Unlimited';
-      case 'yellow':
-        return 'Moderate';
-      case 'red':
-        return 'Limited';
-      default:
-        return 'Not specified';
-    }
-  };
-
   const handleTrackingUpdate = async (foodId: string, checked: boolean) => {
     try {
       await updateTracking(foodId, checked);
@@ -61,10 +39,12 @@ export default function SharedIngredientPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-brand-cream flex items-center justify-center">
-        <div className="bg-brand-white rounded-xl p-12 shadow-sm border border-brand-gold/20 text-center max-w-md">
-          <div className="animate-spin w-8 h-8 border-2 border-brand-gold border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-brand-dark/60 font-prompt">Loading your nutrition plan...</p>
+      <div className="min-h-screen bg-brand-cream/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-brand-gold rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
+            <img src="/icons/icon-192x192.svg" alt="Loading" className="w-10 h-10" />
+          </div>
+          <p className="text-brand-dark/60 font-prompt">Loading your plan...</p>
         </div>
       </div>
     );
@@ -72,10 +52,10 @@ export default function SharedIngredientPage() {
 
   if (error || !document) {
     return (
-      <div className="min-h-screen bg-brand-cream flex items-center justify-center p-4">
-        <div className="bg-brand-white rounded-xl p-12 shadow-sm border border-red-200 text-center max-w-md">
+      <div className="min-h-screen bg-brand-cream/30 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl p-12 shadow-card border border-red-200 text-center max-w-md">
           <div className="w-16 h-16 bg-red-100 rounded-full mx-auto mb-6 flex items-center justify-center">
-            <span className="text-red-600 text-2xl">⚠️</span>
+            <AlertCircle className="w-8 h-8 text-red-600" />
           </div>
           <h1 className="font-prompt font-bold text-xl text-brand-dark mb-4">
             Plan Not Available
@@ -83,172 +63,213 @@ export default function SharedIngredientPage() {
           <p className="text-brand-dark/60 mb-6">
             {error || 'This nutrition plan is no longer available or the link has expired.'}
           </p>
-          <p className="text-sm text-brand-dark/50">
-            Please contact your coach for a new link.
-          </p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-brand-cream">
-      {/* Header */}
-      <header className="bg-brand-dark text-brand-white">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="text-center">
-            <h1 className="font-prompt font-bold text-2xl mb-2">
-              Nutrition Plan for {document.clientName}
-            </h1>
-            <p className="text-brand-white/80 text-sm">
-              Your personalized ingredient recommendations
-            </p>
-          </div>
-        </div>
-      </header>
+  // Group ingredients by category
+  const ingredientsWithDetails = document.ingredients.map(ing => {
+    const food = getFoodDetails(ing.foodId);
+    return {
+      ...ing,
+      food,
+      // Use shared categorization logic
+      resolvedCategory: food ? determineFoodCategory(food) : 'other'
+    };
+  });
 
-      {/* Progress Overview */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <div className="bg-brand-white rounded-xl p-6 shadow-sm border border-brand-gold/20 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-prompt font-bold text-lg text-brand-dark">
-              Nutrition Goals Progress
-            </h2>
-            <span className="text-2xl font-bold text-brand-gold">
-              {progressPercentage}%
-            </span>
+  const groupedIngredients = ingredientsWithDetails.reduce((acc, ing) => {
+    const catId = ing.resolvedCategory || 'other';
+    if (!acc[catId]) acc[catId] = [];
+    acc[catId].push(ing);
+    return acc;
+  }, {} as Record<string, typeof ingredientsWithDetails>);
+
+  const sortedCategories = getSortedCategories();
+  const hasAnyFoods = ingredientsWithDetails.length > 0;
+
+  return (
+    <div className="min-h-screen bg-brand-cream/30 font-prompt pb-20">
+
+      {/* Hero Header */}
+      <div className="bg-brand-dark text-white pt-12 pb-24 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-gold/5 rounded-full -ml-10 -mb-10 blur-2xl"></div>
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
+          <div className="inline-flex items-center justify-center p-3 bg-white/10 backdrop-blur-sm rounded-2xl mb-6 shadow-lg border border-white/10">
+            <img src="/logo.png" alt="Logo" className="h-8 w-auto opacity-90" onError={(e) => e.currentTarget.style.display = 'none'} />
+            <span className="text-brand-gold font-bold ml-3 tracking-widest text-sm uppercase">Ingredients for Ownership</span>
           </div>
-          
-          {/* Progress Bar */}
-          <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
-            <div 
-              className="bg-brand-gold h-3 rounded-full transition-all duration-300"
-              style={{ width: `${progressPercentage}%` }}
-            ></div>
-          </div>
-          
-          <p className="text-sm text-brand-dark/60">
-            {progressMetrics ? getProgressSummary(progressMetrics) : 'Loading progress...'}
+
+          <h1 className="text-3xl md:text-5xl font-bold mb-4 font-prompt">
+            Nutrition Plan for <span className="text-brand-gold">{document.clientName}</span>
+          </h1>
+          <p className="text-white/60 max-w-xl mx-auto text-lg font-light">
+            Your personalized guide to therapeutic food & beverage choices.
           </p>
-          
-          {progressMetrics && progressMetrics.breakdown.red.total > 0 && (
-            <p className="text-xs text-brand-dark/50 mt-2">
-              {progressMetrics.breakdown.red.total} awareness-only item(s) • {progressMetrics.breakdown.red.info}
-            </p>
-          )}
+
+          <div className="mt-8 flex justify-center">
+            <PublicExportPDFButton
+              shareToken={shareToken}
+              clientName={document.clientName}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Ingredients List */}
-      <main className="max-w-4xl mx-auto px-4 pb-8">
-        <div className="space-y-4">
-          {document.ingredients.map((ingredient) => {
-            const food = getFoodDetails(ingredient.foodId);
-            const isLoading = trackingLoading.has(ingredient.foodId);
-            
-            return (
-              <div
-                key={ingredient.foodId}
-                className="bg-brand-white rounded-xl p-6 shadow-sm border border-brand-gold/20"
-              >
-                <div className="flex items-start space-x-4">
-                  {/* Conditional Checkbox or Awareness Badge */}
-                  <div className="flex-shrink-0 pt-1">
-                    {isTrackableIngredient(ingredient.colorCode) ? (
-                      <label className="flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={ingredient.clientChecked || false}
-                          onChange={(e) => handleTrackingUpdate(ingredient.foodId, e.target.checked)}
-                          disabled={isLoading}
-                          className="w-6 h-6 text-brand-gold border-2 border-gray-300 rounded focus:ring-2 focus:ring-brand-gold focus:border-transparent disabled:opacity-50"
-                        />
-                      </label>
-                    ) : (
-                      <div className="w-6 h-6 flex items-center justify-center">
-                        <span className="text-xs text-red-600 font-medium border border-red-300 rounded px-1.5 py-0.5 bg-red-50">
-                          ℹ️
-                        </span>
-                      </div>
-                    )}
-                  </div>
+      {/* Main Content Card - Overlapping Header */}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 -mt-16 relative z-20">
 
-                  {/* Food Information */}
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-prompt font-semibold text-lg text-brand-dark">
-                        {food?.name || ingredient.foodId}
-                      </h3>
-                      
-                      {/* Color Badge */}
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getColorBadgeClass(ingredient.colorCode)}`}>
-                        {getColorLabel(ingredient.colorCode)}
-                      </span>
-                    </div>
+        {/* Progress Section */}
+        <div className="bg-white rounded-[32px] p-6 md:p-8 shadow-card border border-brand-gold/10 mb-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <h2 className="text-xl font-bold text-brand-dark mb-1">Your Progress</h2>
+              <p className="text-brand-dark/60 text-sm">Track your adherence to Recommended foods.</p>
+            </div>
 
-                    {/* Food Details */}
-                    {food && (
-                      <div className="space-y-2">
-                        {food.nutritionalHighlights && food.nutritionalHighlights.length > 0 && (
-                          <p className="text-sm text-brand-dark/70">
-                            <strong>Benefits:</strong> {food.nutritionalHighlights.join(', ')}
-                          </p>
-                        )}
-                        
-                        {food.servingSize && (
-                          <p className="text-sm text-brand-dark/70">
-                            <strong>Serving:</strong> {food.servingSize}
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Coach Notes */}
-                    {ingredient.notes && (
-                      <div className="mt-3 p-3 bg-brand-cream rounded-lg">
-                        <p className="text-sm text-brand-dark/80">
-                          <strong>Coach Note:</strong> {ingredient.notes}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Color-Specific Guidance */}
-                    <div className="mt-3 p-3 rounded-lg" style={{
-                      backgroundColor: ingredient.colorCode === 'blue' ? '#e6f3ff' :
-                                      ingredient.colorCode === 'yellow' ? '#fff8e6' :
-                                      ingredient.colorCode === 'red' ? '#ffe6e6' : '#f5f5f5'
-                    }}>
-                      <p className="text-sm text-brand-dark/80 italic">
-                        {getColorMessage(ingredient.colorCode)}
-                      </p>
-                    </div>
-
-                    {/* Loading State */}
-                    {isLoading && (
-                      <div className="mt-2 flex items-center text-sm text-brand-dark/60">
-                        <div className="animate-spin w-4 h-4 border border-brand-gold border-t-transparent rounded-full mr-2"></div>
-                        Updating...
-                      </div>
-                    )}
-                  </div>
-                </div>
+            <div className="flex-1 max-w-md w-full">
+              <div className="flex justify-between text-sm font-bold mb-2">
+                <span className="text-brand-gold">{progressPercentage}% Complete</span>
+                <span className="text-gray-400">Weekly Goal</span>
               </div>
+              <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                <div
+                  className="bg-brand-gold h-3 rounded-full transition-all duration-1000 ease-out"
+                  style={{ width: `${progressPercentage}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Categories Grid */}
+        <div className="space-y-8">
+          {sortedCategories.map((category) => {
+            const categoryFoods = groupedIngredients[category.id] || [];
+            if (categoryFoods.length === 0) return null;
+
+            return (
+              <section key={category.id} className="space-y-4">
+                <div className="flex items-center justify-between border-b border-gray-200/50 pb-2 px-2">
+                  <h3 className="font-bold text-2xl text-brand-dark">{category.displayName}</h3>
+                  <span className="text-xs font-bold bg-white text-brand-dark/50 px-3 py-1 rounded-full border border-gray-100 shadow-sm">
+                    {categoryFoods.length} items
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {categoryFoods.map((ingredient, index) => {
+                    const food = ingredient.food;
+                    const color = ingredient.colorCode || 'blue';
+                    const isLoading = trackingLoading.has(ingredient.foodId);
+                    const isCheckable = isTrackableIngredient(color);
+
+                    let statusConfig = {
+                      bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-100', label: 'Approved', dot: 'bg-blue-500'
+                    };
+
+                    if (color === 'yellow') {
+                      statusConfig = { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-100', label: 'Neutral', dot: 'bg-yellow-500' };
+                    } else if (color === 'red') {
+                      statusConfig = { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-100', label: 'Avoid', dot: 'bg-red-500' };
+                    }
+
+                    return (
+                      <div key={`${ingredient.foodId}-${index}`}
+                        className={`bg-white rounded-2xl p-4 border shadow-sm transition-all relative overflow-hidden ${ingredient.clientChecked
+                          ? 'border-brand-gold/50 shadow-brand-gold/10'
+                          : 'border-gray-100 hover:shadow-md'
+                          }`}>
+
+                        {/* Status Left Border */}
+                        <div className={`absolute top-0 left-0 w-1.5 h-full ${statusConfig.bg.replace('bg-', 'bg-').replace('50', '500')}`}></div>
+
+                        <div className="pl-3 flex flex-col h-full">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="mb-1">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${statusConfig.bg} ${statusConfig.text}`}>
+                                {statusConfig.label}
+                              </span>
+                            </div>
+
+                            {/* Interactive Checkbox */}
+                            {isCheckable && (
+                              <label className="relative flex items-center cursor-pointer group">
+                                <input
+                                  type="checkbox"
+                                  checked={ingredient.clientChecked || false}
+                                  onChange={(e) => handleTrackingUpdate(ingredient.foodId, e.target.checked)}
+                                  disabled={isLoading}
+                                  className="peer sr-only"
+                                />
+                                <div className={`w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center ${ingredient.clientChecked
+                                  ? 'bg-brand-gold border-brand-gold'
+                                  : 'border-gray-300 group-hover:border-brand-gold/50'
+                                  }`}>
+                                  {isLoading ? (
+                                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                  ) : (
+                                    <CheckCircle className={`w-4 h-4 text-white transition-opacity ${ingredient.clientChecked ? 'opacity-100' : 'opacity-0'}`} />
+                                  )}
+                                </div>
+                              </label>
+                            )}
+                          </div>
+
+                          <h4 className="font-bold text-lg text-brand-dark mb-1 leading-tight capitalize">
+                            {food?.name.toLowerCase() || 'Unknown Food'}
+                          </h4>
+
+                          {/* Highlights */}
+                          {food?.nutritionalHighlights && food.nutritionalHighlights.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mb-3">
+                              {food.nutritionalHighlights.slice(0, 2).map((highlight: string, i: number) => (
+                                <span key={i} className="text-[10px] bg-gray-50 text-gray-400 px-1.5 py-0.5 rounded-md uppercase tracking-wide font-medium border border-gray-100">
+                                  {highlight}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Notes */}
+                          {ingredient.notes && (
+                            <div className="mt-auto pt-3 border-t border-gray-50">
+                              <div className="flex items-start gap-1.5 ">
+                                <Info className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                                <p className="text-xs text-gray-500 italic leading-snug">
+                                  "{ingredient.notes}"
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
             );
           })}
         </div>
 
-        {/* Footer */}
-        <div className="mt-12 text-center">
-          <div className="bg-brand-white rounded-xl p-6 shadow-sm border border-brand-gold/20">
-            <p className="text-sm text-brand-dark/60 mb-2">
-              Questions about your plan? Contact your coach.
-            </p>
-            <p className="text-xs text-brand-dark/50">
-              Last updated: {new Date(document.updatedAt.seconds * 1000).toLocaleDateString()}
+        {!hasAnyFoods && (
+          <div className="bg-white rounded-[32px] p-12 text-center shadow-card border border-gray-100">
+            <h3 className="text-xl font-bold text-gray-900">Plan Empty</h3>
+            <p className="text-gray-500 mt-2">
+              This plan content is currently unavailable.
             </p>
           </div>
-        </div>
-      </main>
+        )}
+
+      </div>
+
+      {/* Footer */}
+      <footer className="mt-20 text-center text-brand-dark/40 text-sm pb-8">
+        <p>© {new Date().getFullYear()} Ingredients for Ownership. All rights reserved.</p>
+      </footer>
     </div>
   );
 }

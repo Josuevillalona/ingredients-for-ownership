@@ -5,14 +5,22 @@ import { useParams, useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import Link from 'next/link';
-import { db } from '@/lib/firebase/config';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { IngredientDocumentService } from '@/lib/firebase/ingredient-documents';
+import { foodService } from '@/lib/firebase/foods';
 import { FoodSelectionGuide, FoodItemData, CategoryData, FoodStatus } from '@/components/food';
 import { AIRecommendationPanel } from '@/components/plans/AIRecommendationPanel';
-import type { IngredientDocument, Food } from '@/lib/types';
+import type { IngredientDocument, FoodItem } from '@/lib/types';
 import type { AIRecommendationResponse } from '@/lib/types/ai-recommendations';
+import { ArrowLeft, Save, User, CheckCircle, AlertCircle, MinusCircle } from 'lucide-react';
+
+interface FoodCategory {
+  id: string;
+  name: string;
+  description?: string;
+  order: number;
+}
 
 export default function EditPlanPage() {
   return (
@@ -28,8 +36,10 @@ function EditPlanContent() {
   const params = useParams();
   const documentId = params.id as string;
 
-  const [document, setDocument] = useState<IngredientDocument | null>(null);
-  const [foods, setFoods] = useState<Food[]>([]);
+  // RENAMED to avoid shadowing global document
+  const [planDoc, setPlanDoc] = useState<IngredientDocument | null>(null);
+  const [foods, setFoods] = useState<FoodItem[]>([]);
+  const [foodCategories, setFoodCategories] = useState<FoodCategory[]>([]);
   const [foodStatuses, setFoodStatuses] = useState<Map<string, FoodStatus>>(new Map());
   const [clientName, setClientName] = useState('');
   const [loading, setLoading] = useState(true);
@@ -52,38 +62,46 @@ function EditPlanContent() {
       setLoading(true);
       setError(null);
 
-      // Load the document
+      // 1. Load the document
       const doc = await ingredientDocumentService.getDocument(documentId, user.uid);
       if (!doc) {
         setError('Document not found or you do not have permission to edit it.');
         return;
       }
 
-      setDocument(doc);
+      setPlanDoc(doc);
       setClientName(doc.clientName);
 
-      // Load all foods
-      const foodsQuery = query(collection(db, 'foods'));
-      const foodsSnapshot = await getDocs(foodsQuery);
-      const allFoods = foodsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Food[];
+      // 2. Load all foods (using foodService for consistency)
+      const allFoods = await foodService.getGlobalFoods();
 
+      // 3. Setup Categories (matching NewPlanPage)
+      const coachCategories: FoodCategory[] = [
+        { id: 'meat', name: 'Meat & Poultry', description: 'Chicken, beef, pork, lamb, eggs', order: 1 },
+        { id: 'seafood', name: 'Seafood', description: 'Fish, shellfish, marine proteins', order: 2 },
+        { id: 'plant-proteins', name: 'Plant Proteins', description: 'Tofu, beans, lentils, protein powders', order: 3 },
+        { id: 'vegetables', name: 'Vegetables', description: 'Fresh vegetables and leafy greens', order: 4 },
+        { id: 'healthy-carbs', name: 'Healthy Carbs', description: 'Whole grains, quinoa, sweet potatoes', order: 5 },
+        { id: 'healthy-fats', name: 'Healthy Fats', description: 'Nuts, seeds, avocado, olive oil', order: 6 },
+        { id: 'fruits', name: 'Fruits', description: 'Fresh and dried fruits', order: 7 },
+        { id: 'dairy', name: 'Dairy', description: 'Milk, cheese, yogurt products', order: 8 },
+        { id: 'other', name: 'Other Foods', description: 'Processed and miscellaneous foods', order: 9 }
+      ];
+      setFoodCategories(coachCategories);
       setFoods(allFoods);
 
-      // Initialize food statuses from existing document
+      // 4. Initialize food statuses
       const initialStatuses = new Map<string, FoodStatus>();
-      
-      // Set all foods to 'none' initially
+
+      // Set all to none first
       allFoods.forEach(food => {
         initialStatuses.set(food.id, 'none');
       });
 
-      // Update with existing selections from the document
+      // Apply saved statuses from document
       doc.ingredients.forEach(ingredient => {
         let status: FoodStatus = 'none';
-        
+
         if (ingredient.isSelected && ingredient.colorCode === 'blue') {
           status = 'approved';
         } else if (ingredient.colorCode === 'yellow') {
@@ -91,8 +109,11 @@ function EditPlanContent() {
         } else if (ingredient.colorCode === 'red') {
           status = 'avoid';
         }
-        
-        initialStatuses.set(ingredient.foodId, status);
+
+        // Only set if food still exists in DB
+        if (allFoods.some(f => f.id === ingredient.foodId)) {
+          initialStatuses.set(ingredient.foodId, status);
+        }
       });
 
       setFoodStatuses(initialStatuses);
@@ -104,39 +125,46 @@ function EditPlanContent() {
     }
   };
 
-  // Convert our data to the format expected by FoodSelectionGuide
+  // Convert our data to the format expected by FoodSelectionGuide (with Rich Highlights)
   const getFoodItemData = (): FoodItemData[] => {
     return foods.map(food => {
-      // Use the 'category' field (not 'categoryId') - this is auto-categorized by AI
-      // @ts-ignore - Food type has 'category' field from FoodItem interface
       const categoryId = food.category || 'other';
-      
+
+      // Generate nutritional highlights
+      const nutritionalHighlights: string[] = [];
+      if (food.nutritionalInfo) {
+        const { calories, protein, fiber } = food.nutritionalInfo;
+        if (protein && protein > 10) nutritionalHighlights.push('High Protein');
+        if (fiber && fiber > 3) nutritionalHighlights.push('High Fiber');
+        if (calories && calories < 100) nutritionalHighlights.push('Low Calorie');
+      }
+
+      // Add category confidence as a highlight if available
+      if (food.categoryConfidence && food.categoryConfidence > 0.8) {
+        const confidence = (food.categoryConfidence * 100).toFixed(0);
+        const method = food.categoryMethod === 'regex' ? 'Keyword' :
+          food.categoryMethod === 'huggingface-ai' ? 'AI' : 'Auto';
+        nutritionalHighlights.push(`${method}: ${confidence}%`);
+      }
+
       return {
         id: food.id,
         name: food.name,
+        servingSize: food.servingSize,
         status: foodStatuses.get(food.id) || 'none',
         categoryId,
-        nutritionalHighlights: food.nutritionalHighlights
+        nutritionalHighlights,
+        nutritionalInfo: food.nutritionalInfo
       };
     });
   };
 
   const getCategoryData = (): CategoryData[] => {
-    // Use the same categories as the create page (not from Firestore)
-    // These match the AI categorization system
-    const coachCategories: CategoryData[] = [
-      { id: 'meat', title: 'Meat & Poultry', order: 1 },
-      { id: 'seafood', title: 'Seafood', order: 2 },
-      { id: 'plant-proteins', title: 'Plant Proteins', order: 3 },
-      { id: 'vegetables', title: 'Vegetables', order: 4 },
-      { id: 'healthy-carbs', title: 'Healthy Carbs', order: 5 },
-      { id: 'healthy-fats', title: 'Healthy Fats', order: 6 },
-      { id: 'fruits', title: 'Fruits', order: 7 },
-      { id: 'dairy', title: 'Dairy', order: 8 },
-      { id: 'other', title: 'Other Foods', order: 9 }
-    ];
-    
-    return coachCategories;
+    return foodCategories.map(c => ({
+      id: c.id,
+      title: c.name,
+      order: c.order
+    }));
   };
 
   const handleStatusChange = (foodId: string, status: FoodStatus) => {
@@ -147,7 +175,6 @@ function EditPlanContent() {
     });
   };
 
-  // Handle AI recommendations
   const handleAIRecommendations = (results: AIRecommendationResponse) => {
     const categoryToStatusMap: Record<string, FoodStatus> = {
       'blue': 'approved',
@@ -167,6 +194,7 @@ function EditPlanContent() {
     });
 
     setTimeout(() => {
+      // Global document is now accessible because local var is planDoc
       const foodListElement = document.querySelector('[data-food-list]');
       if (foodListElement) {
         foodListElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -175,12 +203,11 @@ function EditPlanContent() {
   };
 
   const updateDocument = async () => {
-    if (!user || !clientName || !document) {
+    if (!user || !clientName || !planDoc) {
       alert('Please enter a client name before saving.');
       return;
     }
 
-    // Get foods with any status except 'none'
     const selectedFoods = foods.filter(food => {
       const status = foodStatuses.get(food.id);
       return status && status !== 'none';
@@ -193,14 +220,12 @@ function EditPlanContent() {
 
     setSaving(true);
     try {
-      // Prepare ingredients data for Layer 1 format - only include foods with status
       const ingredients = selectedFoods.map(food => {
         const status = foodStatuses.get(food.id) || 'none';
-        
-        // Map status to color code and selection state
+
         let colorCode: 'blue' | 'yellow' | 'red' | null = null;
         let isSelected = false;
-        
+
         if (status === 'approved') {
           colorCode = 'blue';
           isSelected = true;
@@ -214,22 +239,16 @@ function EditPlanContent() {
 
         return {
           foodId: food.id,
-          categoryId: food.categoryId || '',
+          categoryId: food.category || 'other',
           colorCode,
           isSelected,
           notes: `Coach marked as: ${status}`
         };
       });
 
-      console.log('Updating document with data:', {
-        clientName: clientName,
-        ingredients: ingredients,
-        status: 'published'
-      });
-
       const updatedDocument = await ingredientDocumentService.updateDocument(
-        documentId, 
-        user.uid, 
+        documentId,
+        user.uid,
         {
           clientName: clientName,
           ingredients: ingredients,
@@ -265,36 +284,32 @@ function EditPlanContent() {
     return counts;
   };
 
+  // Loading State
   if (loading) {
     return (
-      <div className="min-h-screen bg-brand-cream flex items-center justify-center">
+      <div className="min-h-screen bg-brand-cream/30 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-brand-gold rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
-            <span className="text-brand-white font-prompt font-bold text-2xl">I</span>
+            <img src="/icons/icon-192x192.svg" alt="Loading" className="w-10 h-10" />
           </div>
-          <p className="text-brand-dark/60 font-prompt">Loading plan for editing...</p>
+          <p className="text-brand-dark/60 font-prompt">Loading plan...</p>
         </div>
       </div>
     );
   }
 
-  if (error || !document) {
+  // Error State
+  if (error || !planDoc) {
     return (
       <div className="min-h-screen bg-brand-cream flex items-center justify-center">
         <div className="text-center max-w-md">
           <div className="w-16 h-16 bg-red-500 rounded-full mx-auto mb-4 flex items-center justify-center">
             <span className="text-white font-prompt font-bold text-2xl">!</span>
           </div>
-          <h2 className="font-prompt font-bold text-xl text-brand-dark mb-2">
-            Cannot Edit Plan
-          </h2>
-          <p className="text-brand-dark/60 font-prompt mb-4">
-            {error}
-          </p>
+          <h2 className="font-prompt font-bold text-xl text-brand-dark mb-2">Cannot Edit Plan</h2>
+          <p className="text-brand-dark/60 font-prompt mb-4">{error}</p>
           <Link href="/dashboard">
-            <Button variant="primary">
-              Back to Dashboard
-            </Button>
+            <Button variant="primary">Back to Dashboard</Button>
           </Link>
         </div>
       </div>
@@ -304,101 +319,94 @@ function EditPlanContent() {
   const statusSummary = getStatusSummary();
 
   return (
-    <div className="min-h-screen bg-brand-cream">
-      {/* Header */}
-      <header className="bg-brand-dark shadow-lg border-b border-brand-gold/20">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Link 
-                href={`/dashboard/plans/${documentId}`} 
-                className="text-brand-white/70 hover:text-brand-white"
-              >
-                ← Back to Plan
+    <div className="min-h-full">
+      {/* 1. Full-Width Sticky Header Container */}
+      <div className="sticky top-0 z-[100] bg-white border-b border-gray-100/50 shadow-sm w-full">
+        <div className="max-w-7xl mx-auto px-8 pb-4">
+          <Card className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-md border-brand-gold/10 relative z-20">
+            <div className="flex items-center gap-4 flex-1">
+              {/* Back Button */}
+              <Link href={`/dashboard/plans/${documentId}`}>
+                <Button variant="ghost" size="sm" className="rounded-full w-10 h-10 p-0 flex items-center justify-center bg-gray-50 hover:bg-gray-100">
+                  <ArrowLeft className="w-5 h-5 text-gray-500" />
+                </Button>
               </Link>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-brand-gold rounded-lg flex items-center justify-center">
-                <span className="text-brand-white font-prompt font-bold text-lg">I</span>
-              </div>
-              <h1 className="text-brand-white font-prompt font-bold text-2xl">
-                Edit Nutrition Plan
-              </h1>
-            </div>
-          </div>
-        </div>
-      </header>
 
-      {/* Client Name Input */}
-      <div className="bg-brand-white border-b border-brand-gold/20">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 max-w-md">
-              <label className="block text-sm font-medium text-brand-dark mb-2 font-prompt">
-                Client Name
-              </label>
-              <input
-                type="text"
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                className="w-full px-4 py-3 border border-brand-gold/20 rounded-xl bg-brand-white
-                           focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent
-                           font-prompt text-brand-dark placeholder-brand-dark/40"
-                placeholder="Enter client's name"
-              />
-            </div>
-            
-            {/* Status Summary */}
-            <div className="flex items-center space-x-6 text-sm font-prompt">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-[#81D4FA] rounded-full" />
-                <span className="text-brand-dark">Approved: {statusSummary.approved}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-[#FFC000] rounded-full" />
-                <span className="text-brand-dark">Neutral: {statusSummary.neutral}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-[#FF5252] rounded-full" />
-                <span className="text-brand-dark">Avoid: {statusSummary.avoid}</span>
+              <div className="h-8 w-px bg-gray-200 hidden md:block"></div>
+
+              {/* Client Name Input */}
+              <div className="flex-1 max-w-sm">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block ml-1">Client Name <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={clientName}
+                    onChange={(e) => setClientName(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-transparent focus:bg-white focus:border-brand-gold/50 rounded-full text-brand-dark font-medium placeholder:text-gray-400 focus:outline-none transition-all"
+                    placeholder="Enter client name..."
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex space-x-2">
-              <Button
-                variant="secondary"
-                onClick={() => router.push(`/dashboard/plans/${documentId}`)}
-              >
-                Cancel
-              </Button>
+            <div className="flex items-center gap-3">
+              {/* Status Counters */}
+              <div className="flex items-center gap-2 mr-2">
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${statusSummary.approved > 0 ? 'bg-green-50 border-green-200 text-green-700' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  <span className="text-xs font-bold">{statusSummary.approved}</span>
+                </div>
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${statusSummary.neutral > 0 ? 'bg-yellow-50 border-yellow-200 text-yellow-700' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
+                  <MinusCircle className="w-3.5 h-3.5" />
+                  <span className="text-xs font-bold">{statusSummary.neutral}</span>
+                </div>
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${statusSummary.avoid > 0 ? 'bg-red-50 border-red-200 text-red-700' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span className="text-xs font-bold">{statusSummary.avoid}</span>
+                </div>
+              </div>
+
+              {/* Save Button */}
               <Button
                 variant="primary"
                 onClick={updateDocument}
                 isLoading={saving}
                 disabled={!clientName || (statusSummary.approved + statusSummary.neutral + statusSummary.avoid) === 0}
+                className="rounded-full shadow-lg shadow-brand-gold/20"
               >
-                {saving ? 'Saving...' : 'Update Plan'}
+                <Save className="w-4 h-4 mr-2" />
+                {saving ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
-          </div>
+          </Card>
         </div>
       </div>
 
-      {/* AI Recommendations Panel */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      {/* 2. Main Content */}
+      <div className="max-w-7xl mx-auto px-8 pt-6 pb-8 space-y-6">
+
+        {/* AI Recommendations */}
         <AIRecommendationPanel
           onRecommendationsGenerated={handleAIRecommendations}
         />
-      </div>
 
-      {/* Food Selection Guide */}
-      <div data-food-list>
-        <FoodSelectionGuide
-          foods={getFoodItemData()}
-          categories={getCategoryData()}
-          onStatusChange={handleStatusChange}
-        />
+        {/* Food Guide */}
+        <div data-food-list className="bg-white rounded-[32px] shadow-card p-4 md:p-8 border border-gray-100">
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-brand-dark">Edit Selection</h2>
+            <p className="text-gray-500 mt-1 max-w-2xl">
+              Modify the food choices for this plan.
+            </p>
+          </div>
+
+          <FoodSelectionGuide
+            foods={getFoodItemData()}
+            categories={getCategoryData()}
+            onStatusChange={handleStatusChange}
+            showActionIcon={false}
+          />
+        </div>
       </div>
     </div>
   );

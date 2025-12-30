@@ -62,8 +62,8 @@ export default function PlansPage() {
                 key={filter}
                 onClick={() => setStatusFilter(filter)}
                 className={`px-4 py-1.5 rounded-full text-xs font-medium capitalize transition-all duration-300 ${statusFilter === filter
-                    ? 'bg-white text-brand-dark shadow-sm'
-                    : 'text-gray-500 hover:text-brand-dark'
+                  ? 'bg-white text-brand-dark shadow-sm'
+                  : 'text-gray-500 hover:text-brand-dark'
                   }`}
               >
                 {filter}
