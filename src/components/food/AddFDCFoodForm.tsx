@@ -18,11 +18,11 @@ interface AddFDCFoodFormProps {
   className?: string;
 }
 
-export function AddFDCFoodForm({ 
-  onSuccess, 
+export function AddFDCFoodForm({
+  onSuccess,
   onCancel,
   onManualAdd,
-  className = '' 
+  className = ''
 }: AddFDCFoodFormProps) {
   const { createFood, loading: createLoading, error } = useFoods();
   const [selectedFood, setSelectedFood] = useState<Omit<FoodItem, 'id'> | null>(null);
@@ -54,7 +54,7 @@ export function AddFDCFoodForm({
       };
 
       const foodId = await createFood(createData);
-      
+
       if (foodId) {
         console.log(`Successfully added USDA food: ${selectedFood.name} (FDC ID: ${selectedFood.fdcId})`);
         onSuccess?.(foodId);
@@ -117,13 +117,13 @@ export function AddFDCFoodForm({
                     Can't find your food?
                   </h4>
                   <p className="text-amber-800 text-sm mb-4">
-                    If the food you're looking for isn't in our verified database, 
-                    you can add it manually. Note: Manual entries won't have 
+                    If the food you're looking for isn't in our verified database,
+                    you can add it manually. Note: Manual entries won't have
                     scientifically verified nutritional data.
                   </p>
                   <Button
                     onClick={onManualAdd}
-                    variant="outline"
+                    variant="ghost"
                     className="border-amber-300 text-amber-800 hover:bg-amber-100"
                   >
                     Add Food Manually
@@ -144,7 +144,7 @@ export function AddFDCFoodForm({
             </h3>
             <Button
               onClick={handleClearSelection}
-              variant="outline"
+              variant="secondary"
               size="sm"
             >
               Change Selection
@@ -221,7 +221,7 @@ export function AddFDCFoodForm({
       <div className="flex justify-between items-center pt-4 border-t border-gray-200">
         <Button
           onClick={onCancel}
-          variant="outline"
+          variant="secondary"
           disabled={isAdding}
         >
           Cancel
