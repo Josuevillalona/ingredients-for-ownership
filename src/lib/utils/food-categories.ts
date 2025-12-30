@@ -77,10 +77,11 @@ export function getSortedCategories(): FoodCategoryConfig[] {
 /**
  * Determine food category from FoodItem
  */
-export function determineFoodCategory(food: FoodItem): string {
-    // 1. Use assigned category if valid
-    if (food.category && FOOD_CATEGORIES[food.category]) {
-        return food.category;
+export function determineFoodCategory(food: { category?: string; categoryId?: string; tags?: string[] }): string {
+    // 1. Use assigned category if valid (checking both category and categoryId)
+    const category = food.category || food.categoryId;
+    if (category && FOOD_CATEGORIES[category]) {
+        return category;
     }
 
     // 2. Fallback: Tag-based guessing
