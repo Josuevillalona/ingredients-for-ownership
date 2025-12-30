@@ -14,7 +14,7 @@ interface ClientCardProps {
 export function ClientCard({ client, onEdit, onDelete }: ClientCardProps) {
   const formatDate = (timestamp: any) => {
     if (!timestamp) return 'Unknown';
-    
+
     // Handle Firestore Timestamp
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     return date.toLocaleDateString('en-US', {
@@ -37,11 +37,11 @@ export function ClientCard({ client, onEdit, onDelete }: ClientCardProps) {
             </p>
           )}
         </div>
-        
+
         <div className="flex gap-2">
           {onEdit && (
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={() => onEdit(client)}
               className="text-brand-gold border-brand-gold/30 hover:bg-brand-gold/10"
@@ -51,7 +51,7 @@ export function ClientCard({ client, onEdit, onDelete }: ClientCardProps) {
           )}
           {onDelete && (
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={() => onDelete(client)}
               className="text-red-600 border-red-200 hover:bg-red-50"
@@ -109,8 +109,8 @@ export function ClientCard({ client, onEdit, onDelete }: ClientCardProps) {
         <div className="mb-4">
           <h4 className="text-sm font-medium text-brand-dark mb-1 font-prompt">Notes:</h4>
           <p className="text-sm text-brand-dark/70 line-clamp-2">
-            {client.sessionNotes.length > 100 
-              ? `${client.sessionNotes.substring(0, 100)}...` 
+            {client.sessionNotes.length > 100
+              ? `${client.sessionNotes.substring(0, 100)}...`
               : client.sessionNotes}
           </p>
         </div>
@@ -121,7 +121,7 @@ export function ClientCard({ client, onEdit, onDelete }: ClientCardProps) {
         <div className="text-xs text-brand-dark/50 font-prompt">
           Created: {formatDate(client.createdAt)}
         </div>
-        
+
         <Link href={`/dashboard/clients/${client.id}`}>
           <Button variant="primary" size="sm">
             View Details
