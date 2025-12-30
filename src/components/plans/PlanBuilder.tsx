@@ -129,7 +129,7 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-900">Add Food to Plan</h2>
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={() => setShowAddFood(false)}
             >
               Back to Plan
@@ -232,7 +232,7 @@ export function PlanBuilder({ selectedClientId, onPlanCreated }: PlanBuilderProp
 
             {/* Add New Food Button */}
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={() => setShowAddFood(true)}
               className="whitespace-nowrap"
             >
