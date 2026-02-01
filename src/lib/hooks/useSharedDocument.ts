@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { IngredientDocument, Food } from '@/lib/types';
 import { calculateSmartProgress, type ProgressMetrics } from '@/lib/utils/progress';
 
@@ -41,7 +41,7 @@ export function useSharedDocument(shareToken: string): UseSharedDocumentResult {
   const [error, setError] = useState<string | null>(null);
   const [trackingLoading, setTrackingLoading] = useState<Set<string>>(new Set());
 
-  const loadSharedDocument = async () => {
+  const loadSharedDocument = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -69,7 +69,7 @@ export function useSharedDocument(shareToken: string): UseSharedDocumentResult {
     } finally {
       setLoading(false);
     }
-  };
+  }, [shareToken]);
 
   const updateTracking = async (foodId: string, checked: boolean) => {
     if (!document) return;
@@ -96,7 +96,7 @@ export function useSharedDocument(shareToken: string): UseSharedDocumentResult {
       // Update local state
       setDocument(prev => {
         if (!prev) return prev;
-        
+
         const updatedIngredients = prev.ingredients.map(ingredient =>
           ingredient.foodId === foodId
             ? { ...ingredient, clientChecked: checked }
@@ -136,7 +136,7 @@ export function useSharedDocument(shareToken: string): UseSharedDocumentResult {
     if (shareToken) {
       loadSharedDocument();
     }
-  }, [shareToken]);
+  }, [loadSharedDocument, shareToken]);
 
   return {
     document,

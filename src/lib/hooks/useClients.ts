@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { clientService } from '@/lib/firebase/clients';
 import type { Client, CreateClientData } from '@/lib/types';
@@ -20,7 +20,7 @@ export function useClients(): UseClientsResult {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     if (!user) return;
 
     setIsLoading(true);
@@ -34,7 +34,7 @@ export function useClients(): UseClientsResult {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   const createClient = async (clientData: CreateClientData): Promise<string> => {
     if (!user) throw new Error('User not authenticated');
@@ -86,7 +86,7 @@ export function useClients(): UseClientsResult {
 
   useEffect(() => {
     fetchClients();
-  }, [user]);
+  }, [fetchClients]);
 
   return {
     clients,

@@ -46,19 +46,19 @@ export function ClientProgress({ document, foods = [], className = '' }: ClientP
             {stats.percentage}%
           </span>
         </div>
-        
+
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-          <div 
+          <div
             className={`h-2 rounded-full transition-all duration-300 ${getProgressBarColor(stats.percentage)}`}
             style={{ width: `${stats.percentage}%` }}
           ></div>
         </div>
-        
+
         <p className="text-sm text-brand-dark/60">
           {getProgressSummary(progressMetrics)}
         </p>
-        
+
         {progressMetrics.breakdown.red.total > 0 && (
           <p className="text-xs text-brand-dark/50 mt-1">
             {progressMetrics.breakdown.red.total} awareness-only item(s) • {progressMetrics.breakdown.red.info}
@@ -96,8 +96,8 @@ export function ClientProgress({ document, foods = [], className = '' }: ClientP
       {/* Empty State */}
       {stats.checked === 0 && (
         <div className="text-center py-2">
-          <p className="text-sm text-brand-dark/60">
-            Client hasn't started tracking nutrition goals yet
+          <p className="text-gray-500 font-medium">
+            You haven&apos;t tracked any food choices yet.
           </p>
         </div>
       )}

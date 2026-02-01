@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import Link from 'next/link';
+import Image from 'next/image';
 import { IngredientDocumentService } from '@/lib/firebase/ingredient-documents';
 import { db } from '@/lib/firebase/config';
 import { collection, query, getDocs } from 'firebase/firestore';
@@ -37,15 +38,7 @@ function ViewPlanContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const ingredientDocumentService = new IngredientDocumentService();
-
-  useEffect(() => {
-    if (user && documentId) {
-      loadDocument();
-    }
-  }, [user, documentId]);
-
-  const loadDocument = async () => {
+  const fetchPlan = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -53,6 +46,7 @@ function ViewPlanContent() {
       setError(null);
 
       // Load the document
+      const ingredientDocumentService = new IngredientDocumentService();
       const doc = await ingredientDocumentService.getDocument(documentId, user.uid);
       if (!doc) {
         setError('Document not found or you do not have permission to view it.');
@@ -77,7 +71,13 @@ function ViewPlanContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, documentId]);
+
+  useEffect(() => {
+    if (user && documentId) {
+      fetchPlan();
+    }
+  }, [user, documentId, fetchPlan]);
 
   const copyShareLink = () => {
     if (document) {
@@ -117,9 +117,11 @@ function ViewPlanContent() {
     return (
       <div className="min-h-screen bg-brand-cream/30 flex items-center justify-center">
         <div className="text-center">
-          <img
+          <Image
             src="/icons/icon-192x192.svg"
             alt="Loading"
+            width={64}
+            height={64}
             className="w-16 h-16 mx-auto mb-4 animate-pulse"
           />
           <p className="text-brand-dark/60 font-prompt">Loading document...</p>
@@ -166,7 +168,7 @@ function ViewPlanContent() {
 
               <div className="flex-1">
                 <div className="flex items-center gap-3">
-                  <h1 className="text-xl font-bold text-brand-dark">{document.clientName}'s Plan</h1>
+                  <h1 className="text-xl font-bold text-brand-dark">{document.clientName}&apos;s Plan</h1>
                   <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${document.status === 'published'
                     ? 'bg-green-50 text-green-700 border-green-200'
                     : 'bg-orange-50 text-orange-700 border-orange-200'
@@ -277,7 +279,7 @@ function ViewPlanContent() {
                           <div className="flex items-start gap-1.5 mt-2 bg-gray-50 p-2 rounded-lg">
                             <Info className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
                             <p className="text-xs text-gray-500 italic leading-snug">
-                              "{ingredient.notes}"
+                              &quot;{ingredient.notes}&quot;
                             </p>
                           </div>
                         )}
@@ -297,7 +299,7 @@ function ViewPlanContent() {
             </div>
             <h3 className="text-lg font-bold text-gray-900">No foods selected</h3>
             <p className="text-gray-500 mt-1 mb-6 max-w-sm mx-auto">
-              This plan doesn't have any foods added yet. Edit the plan to start adding recommendations.
+              This plan doesn&apos;t have any foods added yet. Edit the plan to start adding recommendations.
             </p>
             <Button
               onClick={() => router.push(`/dashboard/plans/${documentId}/edit`)}

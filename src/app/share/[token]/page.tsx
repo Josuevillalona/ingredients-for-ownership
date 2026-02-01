@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import type { Food } from '@/lib/types';
 import { useSharedDocument } from '@/lib/hooks/useSharedDocument';
@@ -41,10 +42,14 @@ export default function SharedIngredientPage() {
     return (
       <div className="min-h-screen bg-brand-cream/30 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-brand-gold rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
-            <img src="/icons/icon-192x192.svg" alt="Loading" className="w-10 h-10" />
-          </div>
-          <p className="text-brand-dark/60 font-prompt">Loading your plan...</p>
+          <Image
+            src="/icons/icon-192x192.svg"
+            alt="Loading"
+            width={64}
+            height={64}
+            className="w-16 h-16 mx-auto mb-4 animate-pulse"
+          />
+          <p className="text-brand-dark/60 font-prompt">Loading plan...</p>
         </div>
       </div>
     );
@@ -99,7 +104,13 @@ export default function SharedIngredientPage() {
 
         <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
           <div className="inline-flex items-center justify-center p-3 bg-white/10 backdrop-blur-sm rounded-2xl mb-6 shadow-lg border border-white/10">
-            <img src="/logo.png" alt="Logo" className="h-8 w-auto opacity-90" onError={(e) => e.currentTarget.style.display = 'none'} />
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              width={120}
+              height={32}
+              className="h-8 w-auto opacity-90"
+            />
             <span className="text-brand-gold font-bold ml-3 tracking-widest text-sm uppercase">Ingredients for Ownership</span>
           </div>
 
@@ -240,7 +251,7 @@ export default function SharedIngredientPage() {
                               <div className="flex items-start gap-1.5 ">
                                 <Info className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
                                 <p className="text-xs text-gray-500 italic leading-snug">
-                                  "{ingredient.notes}"
+                                  &quot;{ingredient.notes}&quot;
                                 </p>
                               </div>
                             </div>

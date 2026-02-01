@@ -86,7 +86,7 @@ export function FoodSelectionGuide({ foods, categories, onStatusChange, showActi
         <div className="flex items-center space-x-4 text-sm text-brand-dark/60 font-prompt">
           <span>Showing {filteredFoods.length} foods</span>
           {searchTerm && (
-            <span>• Search: "{searchTerm}"</span>
+            <span>• Search: &quot;{searchTerm}&quot;</span>
           )}
           {selectedCategory && (
             <span>• Category: {categories.find(c => c.id === selectedCategory)?.title}</span>

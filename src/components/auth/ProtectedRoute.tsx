@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useEffect } from 'react';
 
 interface ProtectedRouteProps {
@@ -41,10 +42,10 @@ export function ProtectedRoute({
 // Loading spinner component
 function LoadingSpinner() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen bg-brand-cream/30 flex items-center justify-center">
       <div className="text-center">
         <div className="w-16 h-16 bg-brand-gold rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
-          <img src="/icons/icon-192x192.svg" alt="Loading" className="w-10 h-10" />
+          <Image src="/icons/icon-192x192.svg" alt="Loading" width={40} height={40} className="w-10 h-10" />
         </div>
         <p className="text-brand-dark/60 font-prompt">Loading...</p>
       </div>

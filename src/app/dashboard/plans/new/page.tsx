@@ -7,6 +7,7 @@ import { useAuth } from '@/components/providers/AuthProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import Link from 'next/link';
+import Image from 'next/image';
 import { db } from '@/lib/firebase/config';
 import { IngredientDocumentService } from '@/lib/firebase/ingredient-documents';
 import { foodService } from '@/lib/firebase/foods';
@@ -313,7 +314,7 @@ function NewPlanContent() {
       <div className="min-h-screen bg-brand-cream/30 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-brand-gold rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
-            <img src="/icons/icon-192x192.svg" alt="Loading" className="w-10 h-10" />
+            <Image src="/icons/icon-192x192.svg" alt="Loading" width={40} height={40} className="w-10 h-10" />
           </div>
           <p className="text-brand-dark/60 font-prompt">
             Loading food database...

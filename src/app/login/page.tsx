@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/components/providers/AuthProvider';
 
@@ -52,7 +53,7 @@ export default function LoginPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-brand-gold rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
-            <img src="/icons/icon-192x192.svg" alt="Loading" className="w-10 h-10" />
+            <Image src="/icons/icon-192x192.svg" alt="Loading" width={40} height={40} className="w-10 h-10" />
           </div>
           <p className="text-brand-dark/60 font-prompt">Loading...</p>
         </div>
@@ -85,9 +86,11 @@ export default function LoginPage() {
         <div className="relative z-10 flex flex-col justify-end p-12 text-white">
           {/* Logo */}
           <div className="mb-8">
-            <img
+            <Image
               src="/OI logos/Normal Light (1).png"
               alt="Ingredients for Ownership"
+              width={200}
+              height={48}
               className="h-12 w-auto"
             />
           </div>
@@ -97,7 +100,7 @@ export default function LoginPage() {
             Create personalized nutrition plans in minutes
           </h2>
           <p className="text-white/70 text-lg max-w-md">
-            AI-powered food recommendations tailored to each client's unique health goals and dietary needs.
+            AI-powered food recommendations tailored to each client&apos;s unique health goals and dietary needs.
           </p>
         </div>
       </div>
@@ -108,7 +111,7 @@ export default function LoginPage() {
           {/* Header */}
           <div className="text-center">
             <div className="w-16 h-16 bg-brand-gold rounded-full mx-auto mb-4 flex items-center justify-center">
-              <img src="/icons/icon-192x192.svg" alt="IO Logo" className="w-10 h-10" />
+              <Image src="/icons/icon-192x192.svg" alt="IO Logo" width={40} height={40} className="w-10 h-10" />
             </div>
             <h1 className="font-bold text-3xl text-brand-dark">
               Welcome Back
@@ -165,11 +168,13 @@ export default function LoginPage() {
               >
                 Sign In
               </Button>
+
+
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-brand-dark/60 text-sm">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <button
                   onClick={() => router.push('/signup')}
                   className="text-brand-gold hover:text-brand-hover font-medium"

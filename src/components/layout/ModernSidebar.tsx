@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
     Home,
@@ -34,9 +35,11 @@ export function ModernSidebar() {
     return (
         <div className="w-20 bg-brand-white rounded-[40px] shadow-card border border-gray-200 flex flex-col items-center py-8 gap-8 h-[calc(100vh-2rem)] sticky top-4 mb-4 ml-4">
             {/* Logo */}
-            <img
+            <Image
                 src="/icons/icon-192x192.svg"
                 alt="IO Logo"
+                width={40}
+                height={40}
                 className="w-10 h-10 rounded-xl shadow-glow shrink-0"
             />
 

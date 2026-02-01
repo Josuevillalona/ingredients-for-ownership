@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -15,27 +15,31 @@ export default function PlansPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [plans, setPlans] = useState<IngredientDocument[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Renamed from loading to isLoading
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
+  const [error, setError] = useState<string | null>(null); // Added error state
 
-  const loadPlans = async () => {
+  // Load plans content
+  const loadPlans = useCallback(async () => {
     if (!user) return;
     try {
-      setLoading(true);
+      setIsLoading(true);
+      setError(null);
       // Fetch all documents for the coach
-      const docs = await ingredientDocumentService.getCoachDocuments(user.uid, 100);
+      const docs = await ingredientDocumentService.getCoachDocuments(user.uid, 50);
       setPlans(docs);
     } catch (error) {
       console.error('Error loading plans:', error);
+      setError('Failed to load plans.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }, [user]); // Dependency array for useCallback
 
   useEffect(() => {
-    loadPlans();
-  }, [user]);
+    if (user) loadPlans();
+  }, [user, loadPlans]); // Updated useEffect dependency array
 
   const filteredPlans = plans.filter(plan => {
     const matchesSearch = plan.clientName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -95,7 +99,7 @@ export default function PlansPage() {
       </div>
 
       {/* Content */}
-      {loading ? (
+      {isLoading ? (
         <div className="flex items-center justify-center py-20">
           <div className="w-8 h-8 border-4 border-brand-gold border-t-transparent rounded-full animate-spin"></div>
         </div>

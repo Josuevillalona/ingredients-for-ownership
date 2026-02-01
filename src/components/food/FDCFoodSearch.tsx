@@ -201,7 +201,7 @@ export function FDCFoodSearch({
       {searchMeta && (
         <div className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3">
           <p>
-            Found {searchMeta.resultsCount} results for "{searchMeta.query}"
+            Found {searchMeta.resultsCount} results for &quot;{searchMeta.query}&quot;
             {searchMeta.resultsCount >= maxResults && ` (showing first ${maxResults})`}
           </p>
         </div>
@@ -255,8 +255,8 @@ function FDCFoodCard({ food, isSelected, onSelect, onQuickSave, onViewDetail, is
   return (
     <div
       className={`border rounded-lg p-3 cursor-pointer transition-colors ${isSelected
-          ? 'border-blue-500 bg-blue-50'
-          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+        ? 'border-blue-500 bg-blue-50'
+        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
         }`}
       onClick={onSelect}
     >

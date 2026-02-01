@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { foodService } from '@/lib/firebase/foods';
 import { useAuth } from './useAuth';
 import type { FoodItem, CreateFoodData } from '@/lib/types';
@@ -9,8 +9,8 @@ export function useFoods() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load global foods available to all coaches
-  const loadFoods = async () => {
+  // Load global foods available to all coaches - Memoized for useEffect dependency
+  const loadFoods = useCallback(async () => {
     if (!user) {
       setFoods([]);
       setLoading(false);
@@ -20,13 +20,13 @@ export function useFoods() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Load all global foods (saved by any coach)
       const globalFoods = await foodService.getGlobalFoods();
-      
+
       // Sort by name for consistent display
       globalFoods.sort((a, b) => a.name.localeCompare(b.name));
-      
+
       setFoods(globalFoods);
     } catch (err) {
       console.error('Error loading foods:', err);
@@ -34,7 +34,7 @@ export function useFoods() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   // Create a new global food - available to all coaches
   const createFood = async (foodData: CreateFoodData): Promise<string | null> => {
@@ -45,15 +45,15 @@ export function useFoods() {
 
     try {
       setError(null);
-      
+
       // Get coach name if available (you might need to get this from user profile)
       const coachName = user.displayName || user.email || 'Unknown Coach';
-      
+
       const foodId = await foodService.createFood(user.uid, foodData, coachName);
-      
+
       // Reload foods to include the new food
       await loadFoods();
-      
+
       return foodId;
     } catch (err) {
       console.error('Error creating food:', err);
@@ -72,10 +72,10 @@ export function useFoods() {
     try {
       setError(null);
       await foodService.updateFood(foodId, user.uid, updates);
-      
+
       // Reload foods to reflect the update
       await loadFoods();
-      
+
       return true;
     } catch (err) {
       console.error('Error updating food:', err);
@@ -94,10 +94,10 @@ export function useFoods() {
     try {
       setError(null);
       await foodService.deleteFood(foodId, user.uid);
-      
+
       // Reload foods to reflect the deletion
       await loadFoods();
-      
+
       return true;
     } catch (err) {
       console.error('Error deleting food:', err);
@@ -109,7 +109,7 @@ export function useFoods() {
   // Search foods - Search within global foods
   const searchFoods = async (searchTerm: string): Promise<FoodItem[]> => {
     if (!searchTerm.trim()) return foods;
-    
+
     try {
       return await foodService.searchFoods(searchTerm);
     } catch (err) {
@@ -128,7 +128,7 @@ export function useFoods() {
   // Load foods when user changes
   useEffect(() => {
     loadFoods();
-  }, [user]);
+  }, [loadFoods]);
 
   return {
     foods,
@@ -149,6 +149,9 @@ export function useFoodsByIds(foodIds: string[]) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Memoize the foodIds string for the dependency array
+  const foodIdsKey = foodIds.join(',');
+
   useEffect(() => {
     if (foodIds.length === 0) {
       setFoods([]);
@@ -160,7 +163,7 @@ export function useFoodsByIds(foodIds: string[]) {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Get foods from the global food database by IDs
         const matchedFoods = await foodService.getFoodsByIds(foodIds);
         setFoods(matchedFoods);
@@ -173,7 +176,7 @@ export function useFoodsByIds(foodIds: string[]) {
     };
 
     fetchFoods();
-  }, [foodIds.join(',')]); // Re-run when food IDs change
+  }, [foodIds, foodIdsKey]); // Use memoized key
 
   return { foods, loading, error };
 }

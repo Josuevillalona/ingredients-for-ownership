@@ -67,7 +67,7 @@ export default function EditFoodPage() {
                 </div>
                 <div className="text-center py-12">
                     <h2 className="text-xl font-bold text-brand-dark mb-2">Food not found</h2>
-                    <p className="text-gray-500">The food item you are trying to edit does not exist or you don't have permission.</p>
+                    <p className="text-gray-500">The food item you are trying to edit does not exist or you don&apos;t have permission.</p>
                 </div>
             </div>
         );

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -26,24 +26,13 @@ function DashboardContent() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const ingredientDocumentService = new IngredientDocumentService();
-
-  useEffect(() => {
-    if (user) loadPlans();
-  }, [user]);
-
-  // Reload on focus
-  useEffect(() => {
-    const handleFocus = () => { if (user) loadPlans(); };
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [user]);
-
-  const loadPlans = async () => {
+  // Load plans content
+  const loadPlans = useCallback(async () => {
     if (!user) return;
     try {
       setIsLoading(true);
       setError(null);
+      const ingredientDocumentService = new IngredientDocumentService();
       const documents = await ingredientDocumentService.getCoachDocuments(user.uid, 50);
       setPlans(documents);
     } catch (error) {
@@ -52,7 +41,18 @@ function DashboardContent() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]); // Only dependent on user
+
+  useEffect(() => {
+    if (user) loadPlans();
+  }, [user, loadPlans]);
+
+  // Reload on focus
+  useEffect(() => {
+    const handleFocus = () => { if (user) loadPlans(); };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [user, loadPlans]);
 
   const filteredPlans = plans.filter(plan =>
     plan.clientName.toLowerCase().includes(searchTerm.toLowerCase())

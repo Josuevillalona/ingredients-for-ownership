@@ -246,6 +246,7 @@ export const IngredientPDFTemplate: React.FC<PDFTemplateProps> = ({
     <Document>
       <Page size="LETTER" orientation="landscape" style={styles.page}>
         {/* Background Image */}
+        {/* eslint-disable-next-line jsx-a11y/alt-text */}
         <Image
           src={backgroundBase64}
           style={styles.background}
@@ -261,6 +262,7 @@ export const IngredientPDFTemplate: React.FC<PDFTemplateProps> = ({
             <Text style={styles.subtitle}>Your Personalized Guide to Make Therapeutic Food & Beverage Choices</Text>
             <Text style={styles.clientName}>{document.clientName}</Text>
           </View>
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
           <Image
             src={logoBase64}
             style={styles.logo}
@@ -271,7 +273,7 @@ export const IngredientPDFTemplate: React.FC<PDFTemplateProps> = ({
         <View style={styles.legendSection}>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: '#81D4FA' }]} />
-            <Text style={styles.legendText}>Therapeutic; offers specific nutrients or compounds that benefit your body's unique needs</Text>
+            <Text style={styles.legendText}>Therapeutic; offers specific nutrients or compounds that benefit your body&apos;s unique needs</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: '#FFC000' }]} />

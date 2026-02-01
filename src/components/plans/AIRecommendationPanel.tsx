@@ -66,7 +66,7 @@ export function AIRecommendationPanel({ onRecommendationsGenerated, onFoodAdded,
         setClientProfile(parts.join('\n'));
       }
     }
-  }, [state, clientData]);
+  }, [state, clientData, clientProfile]);
 
   const handleGenerate = async () => {
     if (!clientProfile.trim() || clientProfile.trim().length < 10) {

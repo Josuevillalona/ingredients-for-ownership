@@ -114,11 +114,11 @@ export function AddFDCFoodForm({
                 </div>
                 <div className="flex-1">
                   <h4 className="text-lg font-semibold text-amber-900 mb-2">
-                    Can't find your food?
+                    Can&apos;t find your food?
                   </h4>
                   <p className="text-amber-800 text-sm mb-4">
-                    If the food you're looking for isn't in our verified database,
-                    you can add it manually. Note: Manual entries won't have
+                    If the food you&apos;re looking for isn&apos;t in our verified database,
+                    you can add it manually. Note: Manual entries won&apos;t have
                     scientifically verified nutritional data.
                   </p>
                   <Button

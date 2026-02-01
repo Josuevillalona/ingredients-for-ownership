@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import Link from 'next/link';
+import Image from 'next/image';
 import { IngredientDocumentService } from '@/lib/firebase/ingredient-documents';
 import { foodService } from '@/lib/firebase/foods';
 import { FoodSelectionGuide, FoodItemData, CategoryData, FoodStatus } from '@/components/food';
@@ -46,16 +47,8 @@ function EditPlanContent() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const ingredientDocumentService = new IngredientDocumentService();
-
   // Load existing document and food data
-  useEffect(() => {
-    if (user && documentId) {
-      loadDocumentAndFoodData();
-    }
-  }, [user, documentId]);
-
-  const loadDocumentAndFoodData = async () => {
+  const loadDocumentAndFoodData = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -63,6 +56,7 @@ function EditPlanContent() {
       setError(null);
 
       // 1. Load the document
+      const ingredientDocumentService = new IngredientDocumentService(); // Instantiate here
       const doc = await ingredientDocumentService.getDocument(documentId, user.uid);
       if (!doc) {
         setError('Document not found or you do not have permission to edit it.');
@@ -123,7 +117,13 @@ function EditPlanContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, documentId]);
+
+  useEffect(() => {
+    if (user && documentId) {
+      loadDocumentAndFoodData();
+    }
+  }, [user, documentId, loadDocumentAndFoodData]);
 
   // Convert our data to the format expected by FoodSelectionGuide (with Rich Highlights)
   const getFoodItemData = (): FoodItemData[] => {
@@ -246,6 +246,7 @@ function EditPlanContent() {
         };
       });
 
+      const ingredientDocumentService = new IngredientDocumentService();
       const updatedDocument = await ingredientDocumentService.updateDocument(
         documentId,
         user.uid,
@@ -290,7 +291,7 @@ function EditPlanContent() {
       <div className="min-h-screen bg-brand-cream/30 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-brand-gold rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
-            <img src="/icons/icon-192x192.svg" alt="Loading" className="w-10 h-10" />
+            <Image src="/icons/icon-192x192.svg" alt="Loading" width={40} height={40} className="w-10 h-10" />
           </div>
           <p className="text-brand-dark/60 font-prompt">Loading plan...</p>
         </div>

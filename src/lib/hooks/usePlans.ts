@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { planService } from '@/lib/firebase/plans';
 import { useAuth } from './useAuth';
 import type { Plan, CreatePlanData } from '@/lib/types';
@@ -22,7 +22,7 @@ export function usePlans(): UsePlansReturn {
   const [error, setError] = useState<string | null>(null);
 
   // Load all plans for the current coach
-  const loadPlans = async () => {
+  const loadPlans = useCallback(async () => {
     if (!user) {
       setPlans([]);
       setLoading(false);
@@ -40,7 +40,7 @@ export function usePlans(): UsePlansReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   // Create a new plan
   const createPlan = async (planData: CreatePlanData): Promise<string | null> => {
@@ -52,10 +52,10 @@ export function usePlans(): UsePlansReturn {
     try {
       setError(null);
       const planId = await planService.createPlan(user.uid, planData);
-      
+
       // Reload plans to include the new one
       await loadPlans();
-      
+
       return planId;
     } catch (err) {
       console.error('Error creating plan:', err);
@@ -74,10 +74,10 @@ export function usePlans(): UsePlansReturn {
     try {
       setError(null);
       await planService.updatePlan(planId, user.uid, updates);
-      
+
       // Reload plans to reflect the update
       await loadPlans();
-      
+
       return true;
     } catch (err) {
       console.error('Error updating plan:', err);
@@ -96,10 +96,10 @@ export function usePlans(): UsePlansReturn {
     try {
       setError(null);
       await planService.deletePlan(planId, user.uid);
-      
+
       // Remove from local state
       setPlans(prev => prev.filter(plan => plan.id !== planId));
-      
+
       return true;
     } catch (err) {
       console.error('Error deleting plan:', err);
@@ -118,10 +118,10 @@ export function usePlans(): UsePlansReturn {
     try {
       setError(null);
       const newPlanId = await planService.duplicatePlan(planId, user.uid, newTitle);
-      
+
       // Reload plans to include the new one
       await loadPlans();
-      
+
       return newPlanId;
     } catch (err) {
       console.error('Error duplicating plan:', err);
@@ -147,7 +147,7 @@ export function usePlans(): UsePlansReturn {
   // Load plans when user changes
   useEffect(() => {
     loadPlans();
-  }, [user]);
+  }, [loadPlans]);
 
   return {
     plans,
