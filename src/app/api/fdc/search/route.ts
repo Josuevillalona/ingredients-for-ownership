@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fdcService } from '@/lib/firebase/fdc';
 import { FDCSearchCriteriaSchema } from '@/lib/validations/fdc';
 
-import { adminAuth } from '@/lib/firebase/admin';
+import { getAdminAuth } from '@/lib/firebase/admin';
 
 /**
  * Helper function to verify Firebase ID token from request headers
@@ -22,7 +22,7 @@ async function verifyAuthentication(request: NextRequest): Promise<boolean> {
     const token = authHeader.substring(7);
 
     // Verify token with Firebase Admin SDK
-    await adminAuth.verifyIdToken(token);
+    await getAdminAuth().verifyIdToken(token);
 
     return true;
   } catch (error) {
