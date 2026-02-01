@@ -35,6 +35,7 @@ interface LlamaResponse {
     reasoning: string;
     confidence: number;
   }>;
+  suggestedMissingFoods?: string[];
 }
 
 export class FoodRecommendationEngine {
@@ -62,7 +63,7 @@ export class FoodRecommendationEngine {
   /**
    * Generate AI-powered food recommendations
    */
-  async generateRecommendations(options: RecommendationOptions): Promise<FoodRecommendation[]> {
+  async generateRecommendations(options: RecommendationOptions): Promise<{ recommendations: FoodRecommendation[], suggestedFoods: string[] }> {
     const { clientProfile, foods, quickToggles } = options;
 
     if (!this.isAvailable()) {
@@ -79,6 +80,7 @@ export class FoodRecommendationEngine {
     });
 
     let aiRecommendations: FoodRecommendation[] = [];
+    let suggestedFoods: string[] = [];
     const errors: Error[] = [];
 
     if (foodsNeedingAI.length > 0) {
@@ -87,22 +89,29 @@ export class FoodRecommendationEngine {
         const batch = foodsNeedingAI.slice(i, i + this.batchSize);
         try {
           const batchResults = await this.getAIRecommendations(clientProfile, batch, quickToggles);
-          aiRecommendations = [...aiRecommendations, ...batchResults];
+          aiRecommendations = [...aiRecommendations, ...batchResults.recommendations];
+          if (batchResults.suggestedFoods) {
+            suggestedFoods = [...suggestedFoods, ...batchResults.suggestedFoods];
+          }
         } catch (error) {
           console.error(`Error processing batch ${i / this.batchSize + 1}:`, error);
           errors.push(error instanceof Error ? error : new Error(String(error)));
         }
       }
 
-      // If we had foods to process but got 0 results, something went wrong.
-      // Don't fail silently.
       if (aiRecommendations.length === 0 && errors.length > 0) {
         throw new Error(`AI processing failed for all batches. Last error: ${errors[errors.length - 1].message}`);
       }
     }
 
     // Combine hard rules + AI recommendations
-    return [...hardRulesResults, ...aiRecommendations];
+    // For now, generateRecommendations interface only returns array, we'll need to update it or return extra data
+    // To match current interface, we'll attach suggestions as a property if possible, or we need to update the return type.
+    // Given the task, let's update the return type of this method to include suggestions.
+    return {
+      recommendations: [...hardRulesResults, ...aiRecommendations],
+      suggestedFoods: [...new Set(suggestedFoods)].slice(0, 5) // Dedup and limit
+    };
   }
 
   /**
@@ -248,7 +257,7 @@ export class FoodRecommendationEngine {
     clientProfile: string,
     foods: FoodItem[],
     quickToggles?: RecommendationOptions['quickToggles']
-  ): Promise<FoodRecommendation[]> {
+  ): Promise<{ recommendations: FoodRecommendation[], suggestedFoods?: string[] }> {
     // Sanitize client profile to prevent prompt injection
     // 1. Remove characters that aren't alphanumeric, punctuation, or basic symbols
     // 2. Truncate to reasonable length
@@ -278,7 +287,7 @@ export class FoodRecommendationEngine {
               content: prompt
             }
           ],
-          temperature: 0.2,
+          temperature: 0.2, // Slightly higher creative temp might be good for suggestions, but 0.2 is safer for JSON
           max_tokens: 4000,
           response_format: { type: 'json_object' }
         })
@@ -363,6 +372,11 @@ IMPORTANT GUIDELINES:
 - Consider digestive impact for gut health issues
 - Be conservative: if unsure, categorize as YELLOW rather than BLUE
 
+TASK 2: MISSING FOOD DISCOVERY
+Identify 3-5 standard whole foods that would be HIGHLY BENEFICIAL (Blue/Therapeutic) for this specific client profile but are MISSING from the "FOODS TO CATEGORIZE" list above.
+- Must be whole foods (e.g., "Salmon", "Avocado", "Turmeric"), not brand names or recipes.
+- Must be distinct from any foods already in the list.
+
 Return ONLY valid JSON in this exact format (no additional text):
 {
   "recommendations": [
@@ -372,6 +386,11 @@ Return ONLY valid JSON in this exact format (no additional text):
       "reasoning": "Brief 1-2 sentence explanation in coach-friendly language",
       "confidence": 0.85
     }
+  ],
+  "suggestedMissingFoods": [
+    "Food Name 1",
+    "Food Name 2",
+    "Food Name 3"
   ]
 }`;
   }
@@ -379,26 +398,22 @@ Return ONLY valid JSON in this exact format (no additional text):
   /**
    * Parse AI response and map to recommendations
    */
-  private parseAIResponse(result: any, foods: FoodItem[]): FoodRecommendation[] {
+  private parseAIResponse(result: any, foods: FoodItem[]): { recommendations: FoodRecommendation[], suggestedFoods?: string[] } {
     try {
-      // Groq uses OpenAI format: result.choices[0].message.content
       const messageContent = result.choices?.[0]?.message?.content;
 
       if (!messageContent) {
         throw new Error('No message content in response');
       }
 
-      // Parse the JSON response
       const parsed: LlamaResponse = JSON.parse(messageContent);
 
       if (!parsed.recommendations || !Array.isArray(parsed.recommendations)) {
         throw new Error('Invalid recommendations format');
       }
 
-      // Map to our format and validate
-      return parsed.recommendations
+      const recommendations = parsed.recommendations
         .filter(rec => {
-          // Validate each recommendation
           return rec.foodId &&
             ['blue', 'yellow', 'red'].includes(rec.category) &&
             rec.reasoning &&
@@ -415,6 +430,11 @@ Return ONLY valid JSON in this exact format (no additional text):
             method: 'ai' as const
           };
         });
+
+      return {
+        recommendations,
+        suggestedFoods: parsed.suggestedMissingFoods
+      };
 
     } catch (error) {
       console.error('Failed to parse AI response:', error);

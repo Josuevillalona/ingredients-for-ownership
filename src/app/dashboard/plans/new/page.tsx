@@ -181,6 +181,26 @@ function NewPlanContent() {
 
 
 
+
+  const handleFoodAdded = (newFood: FoodItem) => {
+    // Add new food to list
+    setFoods(prev => {
+      // Double check not duplicate by ID
+      if (prev.some(f => f.id === newFood.id)) return prev;
+      return [newFood, ...prev]; // Add to top
+    });
+
+    // Auto-approve it (since it came from "Smart Discovery" which is beneficial/blue)
+    setFoodStatuses(prev => {
+      const newStatuses = new Map(prev);
+      newStatuses.set(newFood.id, 'approved');
+      return newStatuses;
+    });
+
+    // Optional: Scroll to it or show toast
+    // For now, it will appear at top of list
+  };
+
   // Updated saveDocument function
   const saveDocument = async () => {
     if (!user || !clientName.trim()) {
@@ -374,6 +394,7 @@ function NewPlanContent() {
         {/* AI Panel */}
         <AIRecommendationPanel
           onRecommendationsGenerated={handleAIRecommendations}
+          onFoodAdded={handleFoodAdded}
           clientData={selectedClient ? {
             name: selectedClient.name,
             goals: selectedClient.goals,

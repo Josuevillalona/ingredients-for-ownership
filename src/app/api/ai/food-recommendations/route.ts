@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { foodRecommendationEngine } from '@/lib/ai/food-recommendation-engine';
 import { foodService } from '@/lib/firebase/foods';
+import { fdcService } from '@/lib/firebase/fdc';
 import type { AIRecommendationRequest, AIRecommendationResponse } from '@/lib/types/ai-recommendations';
 
 export async function POST(request: NextRequest) {
@@ -50,11 +51,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate recommendations
-    const recommendations = await foodRecommendationEngine.generateRecommendations({
+    const aiResult = await foodRecommendationEngine.generateRecommendations({
       clientProfile,
       foods,
       quickToggles
     });
+
+    const recommendations = aiResult.recommendations;
+    const suggestedFoodNames = aiResult.suggestedFoods;
 
     const processingTime = Date.now() - startTime;
 
@@ -62,12 +66,49 @@ export async function POST(request: NextRequest) {
     const hardRulesApplied = recommendations.filter(r => r.confidence >= 0.95).length;
     const aiProcessed = recommendations.length - hardRulesApplied;
 
+    // Fetch details for suggested missing foods (if any)
+    let suggestedFoodsDetails: any[] = [];
+    if (suggestedFoodNames && suggestedFoodNames.length > 0) {
+      try {
+        // Search FDC for each suggestion in parallel
+        const searchPromises = suggestedFoodNames.map(async (name) => {
+          try {
+            // Basic search for the food name
+            const results = await fdcService.searchFoodsEnhanced({
+              query: name,
+              pageSize: 1, // We only want the best match
+              dataType: ['Foundation', 'SR Legacy'] // Prefer whole foods
+            });
+
+            if (results && results.length > 0) {
+              const bestMatch = results[0];
+              // Only include if it doesn't already exist in our DB (fuzzy check by name)
+              const exists = foods.some(f => f.name.toLowerCase().includes(name.toLowerCase()));
+              if (!exists) {
+                return bestMatch;
+              }
+            }
+            return null;
+          } catch (e) {
+            console.warn(`Failed to search FDC for suggestion: ${name}`, e);
+            return null;
+          }
+        });
+
+        const results = await Promise.all(searchPromises);
+        suggestedFoodsDetails = results.filter(item => item !== null);
+      } catch (error) {
+        console.error('Error fetching FDC suggestions:', error);
+      }
+    }
+
     const response: AIRecommendationResponse = {
       recommendations,
       processingTime,
       foodsProcessed: foods.length,
       hardRulesApplied,
-      aiProcessed
+      aiProcessed,
+      suggestedFoods: suggestedFoodsDetails
     };
 
     return NextResponse.json(response);

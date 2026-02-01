@@ -15,12 +15,15 @@ export interface AIRecommendationRequest {
   };
 }
 
+import { FDCEnhancedFoodItem } from '../validations/fdc';
+
 export interface AIRecommendationResponse {
   recommendations: AIFoodRecommendation[];
   processingTime: number; // milliseconds
   foodsProcessed: number;
   hardRulesApplied: number;
   aiProcessed: number;
+  suggestedFoods?: FDCEnhancedFoodItem[]; // New field for smart discoveries
 }
 
 export interface AIFoodRecommendation {
