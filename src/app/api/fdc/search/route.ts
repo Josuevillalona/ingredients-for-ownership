@@ -7,6 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fdcService } from '@/lib/firebase/fdc';
 import { FDCSearchCriteriaSchema } from '@/lib/validations/fdc';
 
+import { adminAuth } from '@/lib/firebase/admin';
+
 /**
  * Helper function to verify Firebase ID token from request headers
  */
@@ -16,11 +18,13 @@ async function verifyAuthentication(request: NextRequest): Promise<boolean> {
     if (!authHeader?.startsWith('Bearer ')) {
       return false;
     }
-    
-    // For now, just check if token exists
-    // In production, would verify with Firebase Admin SDK
+
     const token = authHeader.substring(7);
-    return token.length > 0;
+
+    // Verify token with Firebase Admin SDK
+    await adminAuth.verifyIdToken(token);
+
+    return true;
   } catch (error) {
     console.error('Auth verification error:', error);
     return false;
@@ -49,7 +53,7 @@ export async function GET(request: NextRequest) {
     // Parse and validate query parameters
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('query');
-    
+
     if (!query) {
       return NextResponse.json(
         { error: 'Query parameter is required' },
@@ -89,7 +93,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('FDC search error:', error);
-    
+
     if (error instanceof Error) {
       // Handle validation errors
       if (error.message.includes('validation')) {
@@ -98,7 +102,7 @@ export async function GET(request: NextRequest) {
           { status: 400 }
         );
       }
-      
+
       // Handle FDC API errors
       if (error.message.includes('FDC API')) {
         return NextResponse.json(
@@ -135,7 +139,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
+
     // Validate search criteria
     const validatedCriteria = FDCSearchCriteriaSchema.parse(body);
 
@@ -158,7 +162,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('FDC search error:', error);
-    
+
     if (error instanceof Error) {
       // Handle validation errors
       if (error.message.includes('validation')) {
@@ -167,7 +171,7 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      
+
       // Handle FDC API errors
       if (error.message.includes('FDC API')) {
         return NextResponse.json(

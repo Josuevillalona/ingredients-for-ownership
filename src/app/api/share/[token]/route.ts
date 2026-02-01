@@ -25,6 +25,9 @@ export async function GET(
     const document = await ingredientDocumentService.getDocumentByShareToken(shareToken);
 
     if (!document) {
+      // Add random delay (300-1000ms) to prevent timing attacks and slow down brute-force
+      await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 700));
+
       return NextResponse.json(
         { error: 'Document not found or no longer available' },
         { status: 404 }
@@ -54,7 +57,7 @@ export async function GET(
 
   } catch (error) {
     console.error('❌ Error fetching shared document:', error);
-    
+
     return NextResponse.json(
       { error: 'Failed to load document. Please try again later.' },
       { status: 500 }

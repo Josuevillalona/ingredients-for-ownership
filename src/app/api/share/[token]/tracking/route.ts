@@ -26,7 +26,7 @@ export async function PATCH(
     // Parse request body
     const body = await request.json();
     const { foodId, clientChecked } = body;
-    console.log('📝 Update request:', { foodId, clientChecked });
+    console.log('📝 Update request for foodId:', foodId, 'Checked:', !!clientChecked);
 
     // Validate request data
     if (!foodId || typeof clientChecked !== 'boolean') {
@@ -68,13 +68,13 @@ export async function PATCH(
 
   } catch (error) {
     console.error('❌ Error updating tracking status:', error);
-    
+
     // More detailed error logging
     if (error instanceof Error) {
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
     }
-    
+
     return NextResponse.json(
       { error: 'Failed to update tracking status. Please try again.' },
       { status: 500 }

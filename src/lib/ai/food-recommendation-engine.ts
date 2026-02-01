@@ -249,7 +249,15 @@ export class FoodRecommendationEngine {
     foods: FoodItem[],
     quickToggles?: RecommendationOptions['quickToggles']
   ): Promise<FoodRecommendation[]> {
-    const prompt = this.buildPrompt(clientProfile, foods, quickToggles);
+    // Sanitize client profile to prevent prompt injection
+    // 1. Remove characters that aren't alphanumeric, punctuation, or basic symbols
+    // 2. Truncate to reasonable length
+    const sanitizedProfile = clientProfile
+      .replace(/[^a-zA-Z0-9\s.,?!;:()\-'"]/g, '') // Allow basic punctuation
+      .trim()
+      .slice(0, 1000); // Limit length
+
+    const prompt = this.buildPrompt(sanitizedProfile, foods, quickToggles);
 
     try {
       const response = await fetch(this.modelEndpoint, {
