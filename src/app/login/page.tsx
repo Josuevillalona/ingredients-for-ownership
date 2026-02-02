@@ -86,13 +86,10 @@ export default function LoginPage() {
         <div className="relative z-10 flex flex-col justify-end p-12 text-white">
           {/* Logo */}
           <div className="mb-8">
-            <Image
-              src="/OI logos/Normal Light (1).png"
-              alt="Ingredients for Ownership"
-              width={200}
-              height={48}
-              className="h-12 w-auto"
-            />
+            <h1 className="text-4xl font-bold tracking-tight">
+              <span className="block">Ingredients for</span>
+              <span className="block text-brand-gold">Ownership</span>
+            </h1>
           </div>
 
           {/* Tagline */}

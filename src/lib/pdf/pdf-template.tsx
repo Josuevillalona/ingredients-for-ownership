@@ -231,10 +231,6 @@ export const IngredientPDFTemplate: React.FC<PDFTemplateProps> = ({
   const backgroundBuffer = fs.readFileSync(backgroundPath);
   const backgroundBase64 = `data:image/png;base64,${backgroundBuffer.toString('base64')}`;
 
-  // Read and encode logo
-  const logoPath = path.join(publicDir, 'OI logos', 'Normal Dark (1).png');
-  const logoBuffer = fs.readFileSync(logoPath);
-  const logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`;
 
   // Organize ingredients by category
   const organizedCategories = organizeIngredientsByCategory(document, foods);
@@ -262,11 +258,6 @@ export const IngredientPDFTemplate: React.FC<PDFTemplateProps> = ({
             <Text style={styles.subtitle}>Your Personalized Guide to Make Therapeutic Food & Beverage Choices</Text>
             <Text style={styles.clientName}>{document.clientName}</Text>
           </View>
-          {/* eslint-disable-next-line jsx-a11y/alt-text */}
-          <Image
-            src={logoBase64}
-            style={styles.logo}
-          />
         </View>
 
         {/* Legend */}
