@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
             const results = await fdcService.searchFoodsEnhanced({
               query: name,
               pageSize: 1, // We only want the best match
+              pageNumber: 0,
               dataType: ['Foundation', 'SR Legacy'] // Prefer whole foods
             });
 

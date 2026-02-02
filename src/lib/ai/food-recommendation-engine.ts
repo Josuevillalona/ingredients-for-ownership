@@ -110,7 +110,7 @@ export class FoodRecommendationEngine {
     // Given the task, let's update the return type of this method to include suggestions.
     return {
       recommendations: [...hardRulesResults, ...aiRecommendations],
-      suggestedFoods: [...new Set(suggestedFoods)].slice(0, 5) // Dedup and limit
+      suggestedFoods: Array.from(new Set(suggestedFoods)).slice(0, 5) // Dedup and limit
     };
   }
 
